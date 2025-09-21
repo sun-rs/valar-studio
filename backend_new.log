@@ -1,0 +1,42 @@
+INFO:     Started server process [26266]
+INFO:     Waiting for application startup.
+2025-09-19 13:45:56,088 - app.main - INFO - Starting application...
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - PRAGMA main.table_info("users")
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - [raw sql] ()
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("account_permissions")
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - PRAGMA main.table_info("account_permissions")
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - [raw sql] ()
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("account_config")
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - PRAGMA main.table_info("account_config")
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - [raw sql] ()
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("audit_log")
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - PRAGMA main.table_info("audit_log")
+2025-09-19 13:45:56,088 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-09-19 13:45:56,088 - sqlalchemy.engine.Engine - INFO - [raw sql] ()
+2025-09-19 13:45:56,089 INFO sqlalchemy.engine.Engine COMMIT
+2025-09-19 13:45:56,089 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-09-19 13:45:56,089 - app.main - INFO - Database tables created/verified
+2025-09-19 13:45:56,106 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-19 13:45:56,106 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-09-19 13:45:56,107 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at, users.last_login AS users_last_login, users.settings AS users_settings 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?
+2025-09-19 13:45:56,107 - sqlalchemy.engine.Engine - INFO - SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at, users.last_login AS users_last_login, users.settings AS users_settings 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?
+2025-09-19 13:45:56,107 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ('admin', 1, 0)
+2025-09-19 13:45:56,107 - sqlalchemy.engine.Engine - INFO - [generated in 0.00007s] ('admin', 1, 0)
+2025-09-19 13:45:56,108 - app.main - INFO - Admin user already exists
+2025-09-19 13:45:56,108 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-09-19 13:45:56,108 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:52762 - "GET /docs HTTP/1.1" 200 OK

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: valar-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - valar-data:/data
+      - ./backend/valar.db:/app/valar.db
+    environment:
+      - DATABASE_URL=sqlite:///./valar.db
+      - SECRET_KEY=your-secret-key-here-change-in-production
+      - DEBUG=True
+      - CORS_ORIGINS=http://localhost:3000,http://localhost
+    restart: unless-stopped
+    networks:
+      - valar-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Web Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: valar-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - valar-network
+
+  # Nginx Reverse Proxy (Optional - for production)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: valar-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - frontend
+  #     - backend
+  #   restart: unless-stopped
+  #   networks:
+  #     - valar-network
+
+networks:
+  valar-network:
+    driver: bridge
+
+volumes:
+  valar-data:
+    driver: local

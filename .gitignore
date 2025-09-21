@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.whl
+.ipynb_checkpoints/
+.DS_Store
+.vscode
+CLAUDE.md
+node_modules/

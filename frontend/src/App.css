@@ -1,0 +1,148 @@
+/* Global styles for the application */
+
+/* Remove default margins and paddings */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Ensure full height layout */
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Ant Design overrides */
+.ant-layout {
+  min-height: 100vh;
+}
+
+/* Loading spinner centering */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Table styles */
+.ant-table-wrapper {
+  background: white;
+  border-radius: 8px;
+}
+
+/* Card styles */
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Profit/Loss text colors - Chinese market conventions */
+.text-profit {
+  color: #f5222d; /* 中国市场：盈利用红色 */
+  font-weight: 500;
+}
+
+.text-loss {
+  color: #52c41a; /* 中国市场：亏损用绿色 */
+  font-weight: 500;
+}
+
+/* Status colors */
+.status-success {
+  color: #52c41a;
+}
+
+.status-error {
+  color: #f5222d;
+}
+
+.status-warning {
+  color: #faad14;
+}
+
+.status-info {
+  color: #1890ff;
+}
+
+/* Global responsive styles */
+@media (max-width: 768px) {
+  /* Make tables scrollable on mobile */
+  .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Adjust modal width on mobile */
+  .ant-modal {
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px auto;
+  }
+
+  .ant-modal-body {
+    padding: 16px;
+  }
+
+  /* Adjust card padding on mobile */
+  .ant-card-body {
+    padding: 12px;
+  }
+
+  /* Make buttons more touch-friendly */
+  .ant-btn {
+    min-height: 36px;
+    touch-action: manipulation;
+  }
+
+  /* Adjust spacing on mobile */
+  .ant-space {
+    gap: 8px !important;
+  }
+
+  /* Make form labels stack on mobile */
+  .ant-form-vertical .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+
+  /* Adjust dropdown width on mobile */
+  .ant-select-dropdown {
+    max-width: calc(100vw - 32px);
+  }
+
+  /* Hide table pagination text on mobile */
+  .ant-pagination-total-text {
+    display: none;
+  }
+
+  /* Improve touch targets */
+  .ant-checkbox-wrapper,
+  .ant-radio-wrapper {
+    padding: 8px;
+  }
+
+  /* Make date picker full width on mobile */
+  .ant-picker {
+    width: 100%;
+  }
+
+  /* Adjust font sizes for better readability */
+  .ant-statistic-title {
+    font-size: 12px;
+  }
+
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+
+  /* Improve scrollbar visibility on mobile */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+}

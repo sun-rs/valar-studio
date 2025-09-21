@@ -1,0 +1,169 @@
+.refresh-control {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.refresh-control .refresh-switch {
+  display: flex;
+  align-items: center;
+}
+
+.refresh-control .refresh-interval {
+  display: flex;
+  align-items: center;
+}
+
+.refresh-control .refresh-button {
+  display: flex;
+  align-items: center;
+}
+
+.refresh-control .refresh-status {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.refresh-control .refresh-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.refresh-control .refresh-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #52c41a;
+  animation: refresh-pulse 2s infinite;
+}
+
+@keyframes refresh-pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Value change animations for data displays */
+.value-increase {
+  background-color: rgba(255, 77, 79, 0.1) !important;
+  transition: background-color 2s ease-out;
+}
+
+.value-decrease {
+  background-color: rgba(82, 196, 26, 0.1) !important;
+  transition: background-color 2s ease-out;
+}
+
+.value-change-animation {
+  transition: background-color 0.3s ease-in, color 0.3s ease-in;
+}
+
+/* Table row animations */
+.table-row-increase {
+  background-color: rgba(255, 77, 79, 0.05) !important;
+  animation: row-flash-increase 3s ease-out;
+}
+
+.table-row-decrease {
+  background-color: rgba(82, 196, 26, 0.05) !important;
+  animation: row-flash-decrease 3s ease-out;
+}
+
+@keyframes row-flash-increase {
+  0% {
+    background-color: rgba(255, 77, 79, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes row-flash-decrease {
+  0% {
+    background-color: rgba(82, 196, 26, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Card statistics animations */
+.stat-card-increase {
+  background: linear-gradient(135deg, rgba(255, 77, 79, 0.1), rgba(255, 77, 79, 0.05));
+  animation: stat-card-flash-increase 2s ease-out;
+}
+
+.stat-card-decrease {
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.1), rgba(82, 196, 26, 0.05));
+  animation: stat-card-flash-decrease 2s ease-out;
+}
+
+@keyframes stat-card-flash-increase {
+  0% {
+    background: linear-gradient(135deg, rgba(255, 77, 79, 0.2), rgba(255, 77, 79, 0.1));
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes stat-card-flash-decrease {
+  0% {
+    background: linear-gradient(135deg, rgba(82, 196, 26, 0.2), rgba(82, 196, 26, 0.1));
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* Mobile touch optimization */
+@media (max-width: 768px) {
+  .refresh-control {
+    touch-action: manipulation;
+  }
+
+  .refresh-control .refresh-button {
+    touch-action: manipulation;
+  }
+
+  .refresh-control .refresh-button .ant-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 4px !important;
+  }
+
+  .refresh-control .refresh-switch .ant-switch {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .refresh-control .refresh-interval .ant-select {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 确保z-index足够高 */
+  .refresh-control {
+    position: relative;
+    z-index: 10;
+  }
+
+  /* 移除可能干扰的Tooltip在移动端的行为 */
+  .refresh-control .ant-tooltip {
+    pointer-events: none;
+  }
+}

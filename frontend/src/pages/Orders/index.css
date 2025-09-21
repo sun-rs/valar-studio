@@ -1,0 +1,116 @@
+.orders {
+  height: 100%;
+}
+
+.orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+}
+
+.orders-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.order-filled {
+  background-color: #f6ffed;
+}
+
+.order-partial {
+  background-color: #fff7e6;
+}
+
+.order-cancelled {
+  background-color: #f5f5f5;
+}
+
+/* 可展开行的 hover 效果 */
+.ant-table-row-expandable:hover {
+  background-color: #fafafa;
+  transition: background-color 0.2s;
+}
+
+/* 展开状态的行背景 */
+.ant-table-row[aria-expanded="true"] {
+  background-color: #f0f8ff;
+}
+
+/* 展开行内容样式优化 */
+.ant-table-expanded-row > td {
+  padding: 0 !important;
+  background-color: #fafafa !important;
+  border: none !important;
+}
+
+/* 展开行内部表格样式 */
+.ant-table-expanded-row .ant-table {
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.ant-table-expanded-row .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f0f0;
+  background-color: white !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* 去除展开行表格的额外边框和阴影 */
+.ant-table-expanded-row .ant-table-container {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 去除表格的默认圆角和边框 */
+.ant-table-expanded-row .ant-table-content {
+  border-radius: 0 !important;
+}
+
+/* 确保展开行的第一列和主表格对齐 */
+.ant-table-expanded-row .ant-table-thead > tr > th:first-child,
+.ant-table-expanded-row .ant-table-tbody > tr > td:first-child {
+  padding-left: 16px !important;
+}
+
+/* 让展开图标不响应点击（因为整行都可点击） */
+.ant-table-row-expand-icon {
+  pointer-events: none;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .orders-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .orders-header h2 {
+    margin-bottom: 8px;
+    font-size: 18px;
+  }
+
+  .orders-header .ant-space {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .orders-header .ant-select {
+    width: 100% !important;
+  }
+
+  .orders-header .ant-picker {
+    width: 100% !important;
+  }
+
+  .ant-table {
+    font-size: 12px;
+  }
+}
