@@ -5,6 +5,9 @@
 
 set -e  # Exit on error
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -35,6 +38,18 @@ command_exists() {
 
 # Track whether we already have a Python env with valar ready
 VALAR_READY=0
+
+load_root_env() {
+    if [ -f ".env" ]; then
+        print_info "加载根目录环境变量 (.env)"
+        set -a
+        # shellcheck disable=SC1091
+        source ./.env
+        set +a
+    else
+        print_info "未检测到 .env，使用内置默认配置。如需自定义请复制 .env.example"
+    fi
+}
 
 run_with_privilege() {
     local use_sudo="$1"
@@ -303,6 +318,44 @@ kill_port() {
 }
 
 # Check and install dependencies
+check_node_version() {
+    local required_major=18
+    local required_minor=0
+
+    if ! command_exists node; then
+        print_error "Node.js 未安装，请先安装 Node.js ${required_major}+"
+        exit 1
+    fi
+
+    local version raw_version major minor patch
+    raw_version=$(node --version 2>/dev/null | sed 's/^v//')
+    version=${raw_version:-0.0.0}
+    major=$(echo "$version" | cut -d'.' -f1)
+    minor=$(echo "$version" | cut -d'.' -f2)
+    patch=$(echo "$version" | cut -d'.' -f3)
+
+    if [ -z "$major" ]; then
+        print_error "无法解析 Node.js 版本号: $raw_version"
+        exit 1
+    fi
+
+    if [ "$major" -lt "$required_major" ] || { [ "$major" -eq "$required_major" ] && [ "$minor" -lt "$required_minor" ]; }; then
+        print_error "检测到 Node.js 版本 $raw_version，至少需要 ${required_major}.x。"
+        print_info "请升级 Node.js，可参考 Nodesource (curl -fsSL https://deb.nodesource.com/setup_${required_major}.x | sudo -E bash -; sudo apt install -y nodejs) 或使用 nvm。"
+        exit 1
+    fi
+
+    print_status "Node.js $raw_version 已满足要求"
+
+    if command_exists npm; then
+        NPM_VERSION=$(npm --version)
+        print_status "npm $NPM_VERSION 已安装"
+    else
+        print_error "未检测到 npm，请确认 Node.js 安装完整或手动安装 npm"
+        exit 1
+    fi
+}
+
 check_dependencies() {
     print_info "检查系统依赖..."
 
@@ -315,23 +368,8 @@ check_dependencies() {
     # Ensure valar library is available for the selected Python
     ensure_valar_installed
 
-    # Check Node.js
-    if ! command -v node &> /dev/null; then
-        print_error "Node.js 未安装，请先安装 Node.js 14+"
-        exit 1
-    else
-        NODE_VERSION=$(node --version)
-        print_status "Node.js $NODE_VERSION 已安装"
-    fi
-
-    # Check npm
-    if ! command -v npm &> /dev/null; then
-        print_error "npm 未安装"
-        exit 1
-    else
-        NPM_VERSION=$(npm --version)
-        print_status "npm $NPM_VERSION 已安装"
-    fi
+    # Check Node.js / npm
+    check_node_version
 }
 
 # Setup backend
@@ -482,6 +520,8 @@ start_frontend() {
 
 # Main execution
 main() {
+    load_root_env
+
     # Check dependencies
     check_dependencies
 

@@ -33,6 +33,13 @@ Valar Web 管理系统是一个专业的量化交易管理平台，为 Valar 量
 
 ### 方式一：一键启动脚本（推荐）
 
+首次运行前请先复制环境配置模板：
+
+```bash
+cp .env.example .env
+# 按需修改 .env 内的秘钥、域名、端口等配置
+```
+
 #### macOS/Linux:
 ```bash
 # 添加执行权限
@@ -105,64 +112,37 @@ npm run dev
 ## 系统要求
 
 - Python 3.8+
-- Node.js 14+
-- npm 6+
+- Node.js 18+（开发环境使用 Vite，需支持原生 ESM/顶层 await）
+- npm 8+
 - Docker（可选）
+
+> `./start.sh` 会自动校验 Node.js 版本，如低于要求会退出并提示升级命令。
 
 ## 环境配置
 
-### 后端配置
+### 统一环境配置
 
-**重要**: 请复制 `backend/.env.example` 文件并重命名为 `backend/.env`，然后修改其中的配置：
+> 从现在起，**前后端都读取仓库根目录的 `.env` 文件**，无需分别配置。启动脚本会自动加载该文件，FastAPI 使用同一份配置（`backend` 不再需要单独 `.env`）。
+
+1. 复制模板并根据需要修改（务必更换密钥、管理员密码等敏感信息）：
 
 ```bash
-cp backend/.env.example backend/.env
+cp .env.example .env
 ```
 
-**安全配置要求**：
-- `SECRET_KEY`: 必须生成强密码（建议使用 `openssl rand -base64 32`）
-- `DEFAULT_ADMIN_PASSWORD`: 必须修改默认管理员密码
-- `DATABASE_URL`: 生产环境建议使用完整路径
+2. 常用配置说明（详见 `.env.example` 内注释）：
 
-配置示例：
+| 变量 | 作用 | 默认值 |
+| ---- | ---- | ------ |
+| `APP_NAME` / `APP_VERSION` | 应用信息 | `Valar Web` / `1.0.0` |
+| `HOST` / `PORT` | 后端监听地址与端口 | `0.0.0.0` / `8000` |
+| `SECRET_KEY` | JWT 加密密钥（**必须修改**） | 占位值 |
+| `DEFAULT_ADMIN_*` | 初始管理员账号（**必须修改密码**） | `admin` / `change-me-now` |
+| `APP_ALLOWED_ORIGINS` | 统一的前端域名列表（逗号分隔）。后端用于 CORS，前端用于 Vite `allowedHosts` | `http://localhost:3001,http://localhost:5173` |
+| `VITE_PORT` / `VITE_HOST` | 前端开发服端口/监听地址（可选覆盖） | `3001` / `0.0.0.0` |
+| `VITE_API_TARGET` | 前端代理到的后端地址 | `http://127.0.0.1:8000` |
 
-```env
-# 应用配置
-APP_NAME="Valar Web"
-APP_VERSION="1.0.0"
-DEBUG=False
-
-# 服务器配置
-HOST=0.0.0.0
-PORT=8000
-
-# 数据库配置
-DATABASE_URL=sqlite:///./data/valar.db
-
-# 安全配置（重要：请修改这些值！）
-SECRET_KEY=your-secret-key-change-this-immediately
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-
-# CORS配置（生产环境请更新为实际域名）
-CORS_ORIGINS=["https://yourdomain.com"]
-
-# 管理员配置（重要：请修改密码！）
-DEFAULT_ADMIN_USERNAME=admin
-DEFAULT_ADMIN_PASSWORD=change-this-secure-password
-
-# MongoDB连接（用于Valar数据）
-VALAR_MONGO_CONNECTION=CLOUD
-```
-
-### 前端配置
-
-创建 `frontend/.env` 文件：
-
-```env
-# API配置
-VITE_API_URL=http://localhost:8000
-```
+3. 如需扩展其他环境变量，可直接在 `.env` 中新增，后端可通过 Pydantic Settings 自动读取同名变量。
 
 ## 功能说明
 

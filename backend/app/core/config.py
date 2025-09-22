@@ -1,8 +1,11 @@
 """Configuration settings for the application."""
 from typing import List
-from pydantic_settings import BaseSettings
 from pathlib import Path
-import os
+
+from pydantic import Field, field_validator, model_validator
+from pydantic_settings import BaseSettings
+
+ROOT_DIR = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
@@ -25,8 +28,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
 
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3001", "http://localhost:5173"]
+    # CORS / shared frontend origins
+    ALLOWED_ORIGINS_RAW: str = Field(
+        default="http://localhost:3001,http://localhost:5173",
+        alias="APP_ALLOWED_ORIGINS",
+    )
+    ALLOWED_ORIGINS: List[str] = Field(default_factory=list)
+    CORS_ORIGINS: List[str] = Field(default_factory=list)
 
     # Admin
     DEFAULT_ADMIN_USERNAME: str = "admin"
@@ -39,8 +47,34 @@ class Settings(BaseSettings):
     # MongoDB
     VALAR_MONGO_CONNECTION: str = "CLOUD"
 
+    @field_validator("ALLOWED_ORIGINS", "CORS_ORIGINS", mode="before")
+    @classmethod
+    def _split_csv(cls, value: List[str] | str | None):
+        """Allow comma-separated environment variables for origin lists."""
+        if value is None or value == "":
+            return []
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    @model_validator(mode="after")
+    def _apply_allowed_origins(self):
+        """Fall back to ALLOWED_ORIGINS when CORS_ORIGINS is not explicitly set."""
+        if self.ALLOWED_ORIGINS_RAW:
+            parsed = self._split_csv(self.ALLOWED_ORIGINS_RAW)
+            if not self.ALLOWED_ORIGINS:
+                self.ALLOWED_ORIGINS = parsed
+        if not self.ALLOWED_ORIGINS:
+            self.ALLOWED_ORIGINS = [
+                "http://localhost:3001",
+                "http://localhost:5173",
+            ]
+        if not self.CORS_ORIGINS:
+            self.CORS_ORIGINS = self.ALLOWED_ORIGINS
+        return self
+
     class Config:
-        env_file = ".env"
+        env_file = ROOT_DIR / ".env"
         case_sensitive = True
 
 
