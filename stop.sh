@@ -24,6 +24,89 @@ print_info() {
     echo -e "${YELLOW}[i]${NC} $1"
 }
 
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+run_with_privilege() {
+    local use_sudo="$1"
+    shift
+    if [ "$use_sudo" = "1" ]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
+
+release_port_internal() {
+    local port="$1"
+    local use_sudo="$2"
+    local killed=1
+
+    if command_exists fuser; then
+        if run_with_privilege "$use_sudo" fuser -k "${port}/tcp" >/dev/null 2>&1; then
+            killed=0
+        fi
+    fi
+
+    if command_exists lsof; then
+        local pids
+        pids=$(run_with_privilege "$use_sudo" lsof -tiTCP:"$port" -sTCP:LISTEN -n -P 2>/dev/null)
+        if [ -n "$pids" ]; then
+            killed=0
+            for pid in $pids; do
+                if [ -n "$pid" ]; then
+                    run_with_privilege "$use_sudo" kill -9 "$pid" 2>/dev/null || true
+                fi
+            done
+        fi
+    fi
+
+    if command_exists ss; then
+        local ss_output
+        ss_output=$(run_with_privilege "$use_sudo" ss -tulpnH 2>/dev/null || true)
+        if [ -n "$ss_output" ]; then
+            local ss_pids
+            ss_pids=$(echo "$ss_output" | awk -v p="$port" '$5 ~ ":"p"$"' | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u)
+            if [ -n "$ss_pids" ]; then
+                killed=0
+                for pid in $ss_pids; do
+                    if [ -n "$pid" ]; then
+                        run_with_privilege "$use_sudo" kill -9 "$pid" 2>/dev/null || true
+                    fi
+                done
+            fi
+        fi
+    fi
+
+    return $killed
+}
+
+release_port() {
+    release_port_internal "$1" 0
+}
+
+release_port_with_sudo() {
+    release_port_internal "$1" 1
+}
+
+check_port() {
+    local port=$1
+    if command_exists lsof; then
+        lsof -iTCP:$port -sTCP:LISTEN -n -P >/dev/null 2>&1 && return 0
+    fi
+    if command_exists ss; then
+        ss -tuln 2>/dev/null | awk '{print $5}' | grep -E "[:\.]${port}$" >/dev/null 2>&1 && return 0
+    fi
+    if command_exists netstat; then
+        netstat -tuln 2>/dev/null | awk '{print $4}' | grep -E "[:\.]${port}$" >/dev/null 2>&1 && return 0
+    fi
+    if command_exists fuser; then
+        fuser ${port}/tcp >/dev/null 2>&1 && return 0
+    fi
+    return 1
+}
+
 # ASCII Art Banner
 echo "
 ╔══════════════════════════════════════════════╗
@@ -61,9 +144,21 @@ stop_service() {
     fi
 
     # Also kill any process on the port
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+    if check_port "$port"; then
         print_info "清理端口 $port..."
-        lsof -ti:$port | xargs kill -9 2>/dev/null || true
+        release_port "$port" || true
+        sleep 1
+
+        if check_port "$port"; then
+            print_info "使用 sudo 权限清理端口 $port..."
+            release_port_with_sudo "$port" || true
+        fi
+
+        if check_port "$port"; then
+            print_error "端口 $port 仍被占用，请手动处理"
+        else
+            print_status "端口 $port 已释放"
+        fi
     fi
 }
 

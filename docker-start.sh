@@ -52,7 +52,7 @@ print_status "Docker 已安装"
 
 # Check if Docker daemon is running
 if ! docker info > /dev/null 2>&1; then
-    print_error "Docker 服务未运行，请启动 Docker Desktop"
+    print_error "Docker 服务未运行，请启动 Docker 服务 (macOS: Docker Desktop, Linux: sudo systemctl start docker)"
     exit 1
 fi
 
