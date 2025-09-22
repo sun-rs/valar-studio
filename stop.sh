@@ -168,7 +168,7 @@ stop_service "后端" "backend.pid" 8000
 
 # Stop frontend
 print_info "停止前端服务..."
-stop_service "前端" "frontend.pid" 3000
+stop_service "前端" "frontend.pid" 3001
 
 # Clean up log files (optional)
 read -p "是否清理日志文件？(y/n) " -n 1 -r

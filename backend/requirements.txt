@@ -40,3 +40,4 @@ redis==5.0.1
 
 # Encryption
 cryptography==41.0.7
+pyopenssl>=23.2.0

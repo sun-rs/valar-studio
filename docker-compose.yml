@@ -17,7 +17,7 @@ services:
       - DATABASE_URL=sqlite:///./valar.db
       - SECRET_KEY=your-secret-key-here-change-in-production
       - DEBUG=True
-      - CORS_ORIGINS=http://localhost:3000,http://localhost
+      - CORS_ORIGINS=http://localhost:3001,http://localhost
     restart: unless-stopped
     networks:
       - valar-network
@@ -35,7 +35,7 @@ services:
       dockerfile: Dockerfile
     container_name: valar-frontend
     ports:
-      - "3000:3000"
+      - "3001:3001"
     volumes:
       - ./frontend:/app
       - /app/node_modules

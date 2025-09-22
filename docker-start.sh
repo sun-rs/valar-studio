@@ -74,7 +74,7 @@ else
     echo "查看日志: docker logs valar-backend"
 fi
 
-if curl -s http://localhost:3000 > /dev/null 2>&1; then
+if curl -s http://localhost:3001 > /dev/null 2>&1; then
     print_status "前端服务已启动"
 else
     print_error "前端服务启动失败"
@@ -85,13 +85,13 @@ echo ""
 echo "════════════════════════════════════════════════"
 print_status "Docker 服务已启动！"
 echo ""
-echo "  前端地址: http://localhost:3000"
+echo "  前端地址: http://localhost:3001"
 echo "  后端地址: http://localhost:8000"
 echo "  API文档: http://localhost:8000/docs"
 echo ""
 echo "  默认管理员账号："
 echo "    用户名: admin"
-echo "    密码: admin123"
+echo "    密码: admin123456"
 echo ""
 echo "  常用命令:"
 echo "    查看日志: docker-compose logs -f"

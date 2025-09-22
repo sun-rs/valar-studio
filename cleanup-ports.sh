@@ -165,32 +165,32 @@ else
     print_status "端口 8000 未被占用"
 fi
 
-# Check port 3000 (Frontend)
-print_info "检查前端端口 3000..."
-show_port_info 3000
+# Check port 3001 (Frontend)
+print_info "检查前端端口 3001..."
+show_port_info 3001
 
-if check_port 3000; then
-    read -p "是否强制释放端口 3000? (y/n) " -n 1 -r
+if check_port 3001; then
+    read -p "是否强制释放端口 3001? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "释放端口 3000..."
+        print_info "释放端口 3001..."
 
-        release_port 3000 || true
+        release_port 3001 || true
         sleep 1
 
-        if check_port 3000; then
+        if check_port 3001; then
             print_info "使用 sudo 权限释放端口..."
-            release_port_with_sudo 3000 || true
+            release_port_with_sudo 3001 || true
         fi
 
-        if check_port 3000; then
-            print_error "无法释放端口 3000"
+        if check_port 3001; then
+            print_error "无法释放端口 3001"
         else
-            print_status "端口 3000 已释放"
+            print_status "端口 3001 已释放"
         fi
     fi
 else
-    print_status "端口 3000 未被占用"
+    print_status "端口 3001 未被占用"
 fi
 
 # Kill Python uvicorn processes

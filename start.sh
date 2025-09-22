@@ -33,6 +33,9 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Track whether we already have a Python env with valar ready
+VALAR_READY=0
+
 run_with_privilege() {
     local use_sudo="$1"
     shift
@@ -119,45 +122,71 @@ fi
 find_python_with_valar() {
     print_info "查找安装了 valar 库的 Python..."
 
+    local had_errexit=0
+    case $- in
+        *e*) had_errexit=1; set +e ;;
+    esac
+
     # List of Python paths to check (in priority order)
     PYTHON_PATHS=(
         "/opt/homebrew/bin/python3"      # Homebrew Python 3
         "/opt/homebrew/bin/python"        # Homebrew Python
-        "$(which python3 2>/dev/null)"    # Default python3 (may be aliased)
-        "$(which python 2>/dev/null)"     # Default python (may be aliased)
         "/usr/local/bin/python3"          # User-installed Python 3
         "/usr/local/bin/python"           # User-installed Python
         "/usr/bin/python3"                # System Python 3
-        "python3"                         # Try python3 command directly
-        "python"                          # Try python command directly
+        "/usr/bin/python"                 # System Python
+        "python3"                         # Fallback to PATH lookup
+        "python"                          # Fallback to PATH lookup
     )
+
+    if command_exists python3; then
+        PYTHON_PATHS+=("$(command -v python3)")
+    fi
+
+    if command_exists python; then
+        PYTHON_PATHS+=("$(command -v python)")
+    fi
 
     # Find Python with valar
     PYTHON_EXEC=""
+    local candidate_python=""
+
     for python_path in "${PYTHON_PATHS[@]}"; do
-        if [ -n "$python_path" ]; then
-            # Check if it's a file or a command
-            if [ -f "$python_path" ] || command -v "$python_path" &>/dev/null; then
-                print_debug "检查: $python_path"
-                if $python_path -c "import valar" 2>/dev/null; then
-                    PYTHON_EXEC="$python_path"
-                    PYTHON_VERSION=$($python_path --version 2>&1 | cut -d' ' -f2)
-                    print_status "找到 Python: $python_path (版本: $PYTHON_VERSION)"
-                    print_status "valar 库已安装在此 Python 中"
-                    break
-                fi
+        if [ -z "$python_path" ]; then
+            continue
+        fi
+
+        if [ -f "$python_path" ] || command -v "$python_path" &>/dev/null; then
+            print_debug "检查: $python_path"
+
+            if [ -z "$candidate_python" ]; then
+                candidate_python="$python_path"
+            fi
+
+            if "$python_path" -c "import valar" 2>/dev/null; then
+                PYTHON_EXEC="$python_path"
+                PYTHON_VERSION=$("$python_path" --version 2>&1 | cut -d' ' -f2)
+                print_status "找到 Python: $python_path (版本: $PYTHON_VERSION)"
+                print_status "valar 库已安装在此 Python 中"
+                VALAR_READY=1
+                break
             fi
         fi
     done
 
     if [ -z "$PYTHON_EXEC" ]; then
-        print_error "未找到安装了 valar 库的 Python"
-        echo ""
-        echo "请确保已安装 valar 库。尝试以下命令之一："
-        echo "  pip install valar"
-        echo "  pip3 install valar"
-        echo "  /opt/homebrew/bin/pip install valar"
-        exit 1
+        if [ -z "$candidate_python" ]; then
+            print_error "未找到可用的 Python3 解释器，请先安装 Python3"
+            exit 1
+        fi
+
+        PYTHON_EXEC="$candidate_python"
+        PYTHON_VERSION=$("$PYTHON_EXEC" --version 2>&1 | cut -d' ' -f2)
+        print_info "未检测到已安装 valar 库的 Python，将使用 $PYTHON_EXEC (版本: $PYTHON_VERSION) 并稍后尝试自动安装 valar"
+    fi
+
+    if [ "$had_errexit" -eq 1 ]; then
+        set -e
     fi
 }
 
@@ -188,6 +217,33 @@ find_pip() {
         print_status "使用系统 pip"
     else
         print_error "未找到 pip，将跳过依赖安装"
+    fi
+}
+
+ensure_valar_installed() {
+    if [ "$VALAR_READY" -eq 1 ]; then
+        return 0
+    fi
+
+    if [ -z "$PIP_EXEC" ]; then
+        print_error "未找到 pip，无法自动安装 valar 库。请手动安装 pip 或在当前 Python 环境中安装 valar 后重试。"
+        exit 1
+    fi
+
+    print_info "正在为 $PYTHON_EXEC 安装 valar 库 (首次执行可能需要一些时间)..."
+
+    if $PIP_EXEC install -q valar; then
+        if "$PYTHON_EXEC" -c "import valar" 2>/dev/null; then
+            VALAR_READY=1
+            print_status "valar 库安装成功"
+        else
+            print_error "valar 库安装后仍无法导入，请手动检查 Python 环境"
+            echo "可以尝试运行: $PIP_EXEC install valar"
+            exit 1
+        fi
+    else
+        print_error "自动安装 valar 库失败，请手动执行: $PIP_EXEC install valar"
+        exit 1
     fi
 }
 
@@ -256,6 +312,9 @@ check_dependencies() {
     # Find pip
     find_pip
 
+    # Ensure valar library is available for the selected Python
+    ensure_valar_installed
+
     # Check Node.js
     if ! command -v node &> /dev/null; then
         print_error "Node.js 未安装，请先安装 Node.js 14+"
@@ -286,7 +345,7 @@ setup_backend() {
 
         # Check if key packages are installed
         MISSING_PACKAGES=""
-        for package in fastapi uvicorn sqlalchemy pydantic; do
+        for package in fastapi uvicorn sqlalchemy pydantic pymongo cryptography pyopenssl; do
             if ! $PYTHON_EXEC -c "import $package" 2>/dev/null; then
                 MISSING_PACKAGES="$MISSING_PACKAGES $package"
             fi
@@ -389,8 +448,8 @@ start_frontend() {
     print_info "启动前端服务..."
 
     # Kill existing frontend process
-    if ! kill_port 3000; then
-        print_error "无法启动前端服务，端口 3000 被占用"
+    if ! kill_port 3001; then
+        print_error "无法启动前端服务，端口 3001 被占用"
         return 1
     fi
 
@@ -407,9 +466,9 @@ start_frontend() {
     # Wait for frontend to start
     print_info "等待前端服务启动..."
     for i in {1..30}; do
-        if curl -s http://localhost:3000 > /dev/null 2>&1; then
+        if curl -s http://localhost:3001 > /dev/null 2>&1; then
             print_status "前端服务已启动 (PID: $FRONTEND_PID)"
-            print_status "前端地址: http://localhost:3000"
+            print_status "前端地址: http://localhost:3001"
             return 0
         fi
         printf "."
@@ -448,7 +507,7 @@ main() {
     echo "════════════════════════════════════════════════════════════════════"
     print_status "所有服务已成功启动！"
     echo ""
-    echo "  🌐 前端地址: http://localhost:3000"
+    echo "  🌐 前端地址: http://localhost:3001"
     echo "  🔧 后端地址: http://localhost:8000"
     echo "  📚 API文档: http://localhost:8000/docs"
     echo ""

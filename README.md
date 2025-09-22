@@ -93,7 +93,7 @@ npm run dev
 
 ## 访问地址
 
-- 前端界面: http://localhost:3000
+- 前端界面: http://localhost:3001
 - 后端 API: http://localhost:8000
 - API 文档: http://localhost:8000/docs
 
@@ -375,7 +375,7 @@ Valar Web 提供了认证API，可以与Nginx配合使用，对其他服务进�
 
        # Valar Web主服务
        location / {
-           proxy_pass http://localhost:3000;
+           proxy_pass http://localhost:3001;
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

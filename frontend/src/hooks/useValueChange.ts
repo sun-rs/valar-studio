@@ -105,7 +105,7 @@ export const useValueChangeClasses = (
 export const useRowChangeClasses = (
   value: number | undefined,
   precision = 2,
-  animationDuration = 3000
+  animationDuration = 3001
 ): string => {
   const { changeType, isAnimating } = useValueChange(value, precision, animationDuration);
 
