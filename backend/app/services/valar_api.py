@@ -1,6 +1,7 @@
 from typing import Dict
 import pymongo
 import datetime as dt
+import os
 import valar as va
 from valar.dependencies import pandas as pd
 from valar.dependencies import polars as pl
@@ -10,13 +11,15 @@ def get_mongo_client() -> pymongo.MongoClient:
     """
     获取MongoDB客户端.
     """
-    return va.get_mongo_client("CLOUD")
+    connection_name = os.getenv("VALAR_MONGO_CONNECTION", "VALAR")
+    return va.get_mongo_client(connection_name)
 
 def get_positions(accounts: str | list[str]) -> pd.DataFrame:
     """
     获取账户的持仓信息.
     """
-    return va.get_realtime_pos(accounts=accounts, agg=True, profile="CLOUD")
+    connection_name = os.getenv("VALAR_MONGO_CONNECTION", "VALAR")
+    return va.get_realtime_pos(accounts=accounts, agg=True, profile=connection_name)
 
 def get_accounts(accounts: Dict[str, int | float]) -> pd.DataFrame:
     """
