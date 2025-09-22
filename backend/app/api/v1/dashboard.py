@@ -197,8 +197,7 @@ async def get_accounts_history(
                     data=[]
                 ))
         except Exception as e:
-            # Log error and return empty data for this account
-            print(f"Error getting history for account {account_id}: {e}")
+            # Skip accounts with errors silently
             history_data.append(AccountHistoryData(
                 account_id=account_id,
                 data=[]

@@ -5,12 +5,13 @@ from contextlib import asynccontextmanager
 import logging
 from .core.config import settings
 from .core.database import engine, Base
-from .api.v1 import auth, dashboard, positions, orders
+from .api.v1 import auth, dashboard, positions, orders, security
 from .api.v1 import settings as settings_api
 from .api.v1 import account_config
 from .models import User
 from .core.database import SessionLocal
 from .core.security import get_password_hash
+from .middleware.security_log import SecurityLogMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -49,6 +50,15 @@ async def lifespan(app: FastAPI):
             logger.info(f"Created default admin user: {settings.DEFAULT_ADMIN_USERNAME}")
         else:
             logger.info("Admin user already exists")
+
+        # 清除所有封禁状态（启动时重置）
+        from .models.security_log import LoginBlock
+        cleared_blocks = db.query(LoginBlock).delete()
+        if cleared_blocks > 0:
+            db.commit()
+            logger.info(f"Cleared {cleared_blocks} login blocks on startup")
+        else:
+            logger.info("No login blocks to clear")
     finally:
         db.close()
 
@@ -75,6 +85,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add security logging middleware
+app.add_middleware(SecurityLogMiddleware)
+
 # Include API routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
@@ -82,6 +95,7 @@ app.include_router(positions.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")
 app.include_router(settings_api.router, prefix="/api/v1/settings")
 app.include_router(account_config.router, prefix="/api/v1/account-config")
+app.include_router(security.router, prefix="/api/v1")
 
 # Root endpoint
 @app.get("/")

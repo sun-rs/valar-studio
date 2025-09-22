@@ -1,8 +1,26 @@
 __pycache__/
+.claude/
 *.pyc
-*.whl
+*.log
+*.db
 .ipynb_checkpoints/
 .DS_Store
 .vscode
 CLAUDE.md
+PROJECT_STATUS.md
 node_modules/
+
+# Environment files
+*.env
+.env*
+backend/.env
+.env.local
+.env.development
+.env.production
+
+# Process ID files
+*.pid
+
+# Backup files
+*.backup
+*.bak

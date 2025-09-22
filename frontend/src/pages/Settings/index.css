@@ -95,3 +95,13 @@
     width: 100% !important;
   }
 }
+
+/* 安全日志相关样式 */
+.external-access-row {
+  background-color: #fff2e8 !important;
+  border-left: 3px solid #ff7a00 !important;
+}
+
+.external-access-row:hover {
+  background-color: #ffe7d3 !important;
+}

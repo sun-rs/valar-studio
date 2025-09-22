@@ -1,6 +1,6 @@
 """Authentication endpoints."""
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
@@ -8,6 +8,7 @@ from ...core.database import get_db
 from ...core.security import verify_password, create_access_token, get_password_hash
 from ...core.dependencies import get_current_user, get_user_permissions
 from ...models.user import User
+from ...services.security_service import SecurityService
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -46,14 +47,30 @@ class TokenResponse(BaseModel):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
-    request: LoginRequest,
+    login_request: LoginRequest,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """User login endpoint."""
-    # Find user by username
-    user = db.query(User).filter(User.username == request.username).first()
+    ip_address = SecurityService.get_client_ip(request)
 
-    if not user or not verify_password(request.password, user.password_hash):
+    # Check if IP or user is blocked
+    if SecurityService.is_blocked(db, ip_address, login_request.username):
+        SecurityService.log_login_attempt(
+            db, request, login_request.username, False, "IP or user is blocked"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed login attempts. Please try again later."
+        )
+
+    # Find user by username
+    user = db.query(User).filter(User.username == login_request.username).first()
+
+    if not user or not verify_password(login_request.password, user.password_hash):
+        SecurityService.log_login_attempt(
+            db, request, login_request.username, False, "Invalid credentials"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -61,10 +78,18 @@ async def login(
         )
 
     if not user.is_active:
+        SecurityService.log_login_attempt(
+            db, request, login_request.username, False, "Account inactive"
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
         )
+
+    # Log successful login
+    SecurityService.log_login_attempt(
+        db, request, login_request.username, True
+    )
 
     # Update last login time
     user.last_login = datetime.utcnow()
@@ -126,3 +151,19 @@ async def get_current_user_info(
         updated_at=current_user.updated_at,
         last_login=current_user.last_login
     )
+
+
+@router.get("/verify-admin")
+async def verify_admin_access(
+    current_user: User = Depends(get_current_user)
+):
+    """验证admin用户权限（用于Nginx auth_request）"""
+    # 只允许激活的admin用户访问
+    if not current_user.is_active or current_user.role.value != 'admin':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+
+    # 返回200状态码表示验证通过
+    return {"status": "authorized", "user": current_user.username}

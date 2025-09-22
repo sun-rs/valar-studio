@@ -1,6 +1,6 @@
 """Account configuration API endpoints."""
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
@@ -240,7 +240,7 @@ async def get_user_permissions(
 @router.post("/permissions/user/{user_id}")
 async def set_user_permissions(
     user_id: int,
-    account_ids: List[str],
+    account_ids: List[str] = Body(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

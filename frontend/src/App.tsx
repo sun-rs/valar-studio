@@ -6,12 +6,14 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { useAuthStore } from './stores/authStore';
 import MainLayout from './components/Layout/MainLayout';
+import AdminRoute from './components/AdminRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Positions from './pages/Positions';
 import Orders from './pages/Orders';
 import Settings from './pages/Settings';
 import AccountConfig from './pages/AccountConfig';
+import Modules from './pages/Modules';
 import './App.css';
 
 // Configure dayjs
@@ -53,7 +55,16 @@ const App: React.FC = () => {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="positions" element={<Positions />} />
             <Route path="orders" element={<Orders />} />
-            <Route path="account-config" element={<AccountConfig />} />
+            <Route path="modules" element={
+              <AdminRoute>
+                <Modules />
+              </AdminRoute>
+            } />
+            <Route path="account-config" element={
+              <AdminRoute>
+                <AccountConfig />
+              </AdminRoute>
+            } />
             <Route path="settings" element={<Settings />} />
           </Route>
 

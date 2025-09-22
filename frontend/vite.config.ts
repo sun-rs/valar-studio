@@ -19,6 +19,21 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // 获取客户端真实IP
+            const clientIP = req.connection.remoteAddress ||
+                            req.socket.remoteAddress ||
+                            (req.connection.socket ? req.connection.socket.remoteAddress : null);
+
+            if (clientIP) {
+              // 清理IPv6格式的IPv4地址 (::ffff:192.168.1.100 -> 192.168.1.100)
+              const cleanIP = clientIP.replace(/^::ffff:/, '');
+              proxyReq.setHeader('X-Forwarded-For', cleanIP);
+              proxyReq.setHeader('X-Real-IP', cleanIP);
+            }
+          });
+        },
       },
     },
   },

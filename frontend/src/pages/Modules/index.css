@@ -1,0 +1,30 @@
+.modules {
+  height: 100%;
+}
+
+.modules-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+}
+
+.modules-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .modules-header {
+    padding: 12px 16px;
+  }
+
+  .modules-header h2 {
+    font-size: 18px;
+  }
+}

@@ -10,6 +10,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MenuOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
@@ -99,6 +100,11 @@ const MainLayout: React.FC = () => {
 
   // Admin menu items
   if (user?.role === 'admin') {
+    menuItems.push({
+      key: '/modules',
+      icon: <AppstoreOutlined />,
+      label: '功能模块',
+    });
     menuItems.push({
       key: '/account-config',
       icon: <UserOutlined />,

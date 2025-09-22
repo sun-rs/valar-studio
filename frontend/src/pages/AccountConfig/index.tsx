@@ -24,6 +24,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { accountConfigApi, AccountConfig as AccountConfigType } from '../../services/accountConfig';
 import { settingsService, User as SettingsUser } from '../../services/settings';
 import type { ColumnsType } from 'antd/es/table';
+import './index.css';
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -357,8 +358,12 @@ const AccountConfig: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Card title="账户配置 - 交易账户管理中心">
+    <div className="account-config">
+      <div className="account-config-header">
+        <h2>账户配置</h2>
+      </div>
+
+      <Card className="account-config-content">
         <Tabs activeKey={activeTab} onChange={handleTabChange}>
           <TabPane tab="我的交易账户" key="my-accounts">
             <Table

@@ -386,7 +386,7 @@ const Dashboard: React.FC = () => {
                 value={summary?.available_funds || 0}
                 formatter={(value) => formatCurrency(Number(value))}
                 prefix={<WalletOutlined />}
-                valueStyle={{ color: '#52c41a' }}
+                valueStyle={{ color: '#722ed1' }}
               />
             </Card>
           </Col>
@@ -421,10 +421,14 @@ const Dashboard: React.FC = () => {
                 size="small"
                 style={{ width: 120 }}
                 placeholder="选择账户"
-                options={accounts.map(acc => ({
-                  value: acc.account_id,
-                  label: acc.account_id
-                }))}
+                allowClear
+                options={[
+                  { value: undefined, label: '无选择' },
+                  ...accounts.map(acc => ({
+                    value: acc.account_id,
+                    label: acc.account_id
+                  }))
+                ]}
               />
               <span style={{ fontSize: 14, color: '#666' }}>查看天数:</span>
               <Select
