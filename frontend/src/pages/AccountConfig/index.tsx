@@ -21,7 +21,7 @@ import {
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
-import { accountConfigApi, AccountConfig as AccountConfigType } from '../../services/accountConfig';
+import { accountConfigApi, AccountConfig as AccountConfigType, AccountPermission as AccountPermissionRecord } from '../../services/accountConfig';
 import { settingsService, User as SettingsUser } from '../../services/settings';
 import type { ColumnsType } from 'antd/es/table';
 import './index.css';
@@ -29,16 +29,10 @@ import './index.css';
 const { TabPane } = Tabs;
 const { TextArea } = Input;
 
-
-interface AccountPermission {
-  id: number;
-  user_id: number;
-  username: string;
-  account_id: string;
+type AccountPermission = AccountPermissionRecord & {
+  username?: string;
   account_name?: string;
-  permission_type: string;
-  created_at: string;
-}
+};
 
 const AccountConfig: React.FC = () => {
   const { user } = useAuthStore();
@@ -344,7 +338,7 @@ const AccountConfig: React.FC = () => {
       width: 100,
       render: (type: string) => (
         <Tag color={type === 'view' ? 'blue' : 'green'}>
-          {type === 'view' ? '查看' : '交易'}
+          {type === 'view' ? '查阅' : '交易'}
         </Tag>
       ),
     },
@@ -359,10 +353,6 @@ const AccountConfig: React.FC = () => {
 
   return (
     <div className="account-config">
-      <div className="account-config-header">
-        <h2>账户配置</h2>
-      </div>
-
       <Card className="account-config-content">
         <Tabs activeKey={activeTab} onChange={handleTabChange}>
           <TabPane tab="我的交易账户" key="my-accounts">
@@ -401,7 +391,7 @@ const AccountConfig: React.FC = () => {
               <Spin spinning={permissionLoading}>
                 <Row gutter={24}>
                   <Col xs={24} md={8}>
-                    <Card title="选择用户" style={{ marginBottom: 16 }}>
+                    <Card title="选择用户" className="account-config-panel" style={{ marginBottom: 16 }}>
                       <Radio.Group value={selectedUserId} onChange={handleUserSelect}>
                         <Space direction="vertical">
                           {allUsers.map(user => (
@@ -417,6 +407,7 @@ const AccountConfig: React.FC = () => {
                   <Col xs={24} md={16}>
                     <Card
                       title="分配交易账户"
+                      className="account-config-panel"
                       style={{ marginBottom: 16 }}
                       extra={
                         <Button
@@ -433,15 +424,15 @@ const AccountConfig: React.FC = () => {
                         <Checkbox.Group
                           value={selectedAccountIds}
                           onChange={setSelectedAccountIds}
-                          style={{ width: '100%' }}
+                          className="account-config-checkbox-group"
                         >
                           <Space direction="vertical" style={{ width: '100%' }}>
                             {allAccounts.map(account => (
-                              <Checkbox key={account.account_id} value={account.account_id}>
+                              <Checkbox key={account.account_id} value={account.account_id} className="account-config-checkbox">
                                 <strong>{account.account_id}</strong>
                                 {account.account_name && ` - ${account.account_name}`}
                                 <br />
-                                <span style={{ color: '#666', fontSize: '12px' }}>
+                                <span className="account-config-checkbox-meta">
                                   初始资金: ¥{account.initial_capital.toLocaleString()} |
                                   经纪商: {account.broker || '未设置'}
                                 </span>
@@ -450,7 +441,7 @@ const AccountConfig: React.FC = () => {
                           </Space>
                         </Checkbox.Group>
                       ) : (
-                        <div style={{ textAlign: 'center', color: '#999', padding: '40px' }}>
+                        <div className="account-config-empty">
                           请先选择左侧的用户
                         </div>
                       )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Row, Col, Alert } from 'antd';
+import { Card, Row, Col, Alert, Typography } from 'antd';
 import {
   ContainerOutlined,
   DeploymentUnitOutlined,
@@ -8,6 +8,8 @@ import {
 } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
 import './index.css';
+
+const { Title, Paragraph } = Typography;
 
 interface ModuleCardProps {
   title: string;
@@ -35,32 +37,27 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   return (
     <Card
       hoverable={!disabled}
-      style={{
-        height: '200px',
-        opacity: disabled ? 0.6 : 1,
-        cursor: disabled ? 'not-allowed' : 'pointer'
-      }}
+      className={`module-card${disabled ? ' is-disabled' : ''}`}
       onClick={handleClick}
-      bodyStyle={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        textAlign: 'center'
-      }}
     >
-      <div style={{ fontSize: '48px', color: disabled ? '#ccc' : color, marginBottom: '16px' }}>
+      <div
+        className="module-icon"
+        style={{
+          background: disabled
+            ? 'linear-gradient(135deg, rgba(148,163,184,0.6), rgba(203,213,225,0.6))'
+            : `linear-gradient(135deg, ${color}, ${color}cc)`
+        }}
+      >
         {icon}
       </div>
-      <Title level={4} style={{ margin: '8px 0', color: disabled ? '#ccc' : undefined }}>
+      <Title level={4} style={{ margin: 0, color: disabled ? '#94a3b8' : undefined }}>
         {title}
       </Title>
-      <Paragraph style={{ margin: 0, color: disabled ? '#ccc' : '#666' }}>
+      <Paragraph style={{ margin: 0, color: disabled ? '#cbd5f5' : 'var(--color-text-secondary)' }}>
         {description}
       </Paragraph>
       {!disabled && (
-        <LinkOutlined style={{ position: 'absolute', top: '16px', right: '16px', color: '#999' }} />
+        <LinkOutlined className="module-link-icon" />
       )}
     </Card>
   );
@@ -96,10 +93,6 @@ const Modules: React.FC = () => {
 
   return (
     <div className="modules">
-      <div className="modules-header">
-        <h2>功能模块</h2>
-      </div>
-
       {!isAdmin && (
         <Alert
           message="权限提示"
@@ -111,7 +104,7 @@ const Modules: React.FC = () => {
       )}
 
       {isAdmin && (
-        <Row gutter={[24, 24]}>
+        <Row gutter={[24, 24]} className="modules-grid">
           {modules.map((module, index) => (
             <Col xs={24} sm={12} lg={8} key={index}>
               <ModuleCard
@@ -127,7 +120,7 @@ const Modules: React.FC = () => {
       )}
 
       {isAdmin && (
-        <Card style={{ marginTop: '24px' }}>
+        <Card className="module-instructions" style={{ marginTop: '24px' }}>
           <Title level={4}>使用说明</Title>
           <ul>
             <li><strong>Portainer</strong>: 用于管理Docker容器、镜像、网络等资源</li>

@@ -1,17 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Card, Table, Radio, Space, Button, Tag, Spin, Row, Col } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Card, Table, Radio, Tag, Spin, Row, Col, Tooltip } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import { positionsService, Position } from '../../services/positions';
-import { useAuthStore } from '../../stores/authStore';
 import { useRefreshStore } from '../../stores/refreshStore';
-import { useRowChangeClasses } from '../../hooks/useValueChange';
 import AccountSelector from '../../components/AccountSelector';
 import dayjs from 'dayjs';
 import './index.css';
 
 const Positions: React.FC = () => {
-  const { user } = useAuthStore();
   const { setCurrentPage, setPositionsRefresh } = useRefreshStore();
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'heatmap' | 'chart'>('table');
@@ -202,9 +198,16 @@ const Positions: React.FC = () => {
         title: '更新时间',
         dataIndex: 'updatetime',
         key: 'updatetime',
-        width: 180,
+        width: 160,
+        ellipsis: true,
+        align: 'right' as const,
         sorter: (a: Position, b: Position) => new Date(a.updatetime).getTime() - new Date(b.updatetime).getTime(),
-        render: (text: string) => dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
+        showSorterTooltip: false,
+        render: (text: string) => (
+          <Tooltip title={dayjs(text).format('YYYY-MM-DD HH:mm:ss')} placement="topRight">
+            {dayjs(text).format('MM-DD HH:mm:ss')}
+          </Tooltip>
+        ),
       }
     );
 
@@ -225,30 +228,6 @@ const Positions: React.FC = () => {
       }
       industryMap.get(industry)!.push(pos);
     });
-
-    // 生成颜色函数
-    const getColor = (pnl: number, maxAbsPnl: number) => {
-      if (pnl >= 0) {
-        // 盈利用红色，从浅红到深红
-        const intensity = Math.min(1, Math.abs(pnl) / maxAbsPnl);
-        if (intensity < 0.2) return '#ffcccc';
-        if (intensity < 0.4) return '#ff9999';
-        if (intensity < 0.6) return '#ff6666';
-        if (intensity < 0.8) return '#ff3333';
-        return '#cc0000';
-      } else {
-        // 亏损用绿色，从浅绿到深绿
-        const intensity = Math.min(1, Math.abs(pnl) / maxAbsPnl);
-        if (intensity < 0.2) return '#ccffcc';
-        if (intensity < 0.4) return '#99ff99';
-        if (intensity < 0.6) return '#66ff66';
-        if (intensity < 0.8) return '#33ff33';
-        return '#00cc00';
-      }
-    };
-
-    // 计算最大绝对盈亏用于颜色归一化
-    const maxAbsPnl = Math.max(...positions.map(pos => Math.abs(pos.float_pnl)));
 
     // 生成基于盈利率的颜色函数 - 收益/亏损越大颜色越鲜亮，接近0%使用深暗色
     const getProfitRateColor = (pnl: number, margin: number) => {
@@ -483,8 +462,9 @@ const Positions: React.FC = () => {
         rowKey={(record) => `${record.accountid || 'single'}_${record.code}_${record.direction}_${record.exchange}`}
         loading={loading}
         pagination={false}
-        scroll={{ x: 1500 }}
-        size="middle"
+        scroll={{ x: 'max-content' }}
+        size="small"
+        className="dense-table"
       />
     );
   };
@@ -707,37 +687,37 @@ const Positions: React.FC = () => {
 
   return (
     <div className="positions">
-      <div className="positions-header">
-        <h2>持仓管理</h2>
-        <Space>
-          <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
-            <Radio.Button value="table">表格视图</Radio.Button>
-            <Radio.Button value="heatmap">热力图</Radio.Button>
-            <Radio.Button value="chart">图表视图</Radio.Button>
-          </Radio.Group>
-        </Space>
+      <div className="positions-toolbar">
+        <span className="toolbar-label">视图模式</span>
+        <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
+          <Radio.Button value="table">表格视图</Radio.Button>
+          <Radio.Button value="heatmap">热力图</Radio.Button>
+          <Radio.Button value="chart">图表视图</Radio.Button>
+        </Radio.Group>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <AccountSelector
-            accounts={permittedAccounts}
-            selectedAccounts={selectedAccounts}
-            onChange={setSelectedAccounts}
-            loading={false}
-          />
-        </Col>
-        <Col span={24}>
-          <Card
-            className="positions-content"
-            title={`持仓数据 (${selectedAccounts.length}个账户, ${positions.length}条记录)`}
-          >
-            <Spin spinning={loading}>
-              {viewMode === 'heatmap' ? renderHeatmap() : viewMode === 'table' ? renderTable() : renderCharts()}
-            </Spin>
-          </Card>
-        </Col>
-      </Row>
+      <div className="positions-body">
+        <Row gutter={[16, 16]}>
+          <Col span={24}>
+            <AccountSelector
+              accounts={permittedAccounts}
+              selectedAccounts={selectedAccounts}
+              onChange={setSelectedAccounts}
+              loading={false}
+            />
+          </Col>
+          <Col span={24}>
+            <Card
+              className="positions-content"
+              title={`持仓数据 (${selectedAccounts.length}个账户, ${positions.length}条记录)`}
+            >
+              <Spin spinning={loading}>
+                {viewMode === 'heatmap' ? renderHeatmap() : viewMode === 'table' ? renderTable() : renderCharts()}
+              </Spin>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 };

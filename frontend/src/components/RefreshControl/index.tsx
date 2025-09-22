@@ -18,8 +18,6 @@ const RefreshControl: React.FC = () => {
     setInterval(value);
   };
 
-  const currentIntervalLabel = REFRESH_INTERVALS.find(item => item.value === interval)?.label || '5秒';
-
   return (
     <div className="refresh-control">
       <Space size="small">

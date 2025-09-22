@@ -1,42 +1,73 @@
 .refresh-control {
   display: flex;
   align-items: center;
-  height: 100%;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px);
 }
 
-.refresh-control .refresh-switch {
-  display: flex;
-  align-items: center;
-}
-
+.refresh-control .refresh-button,
+.refresh-control .refresh-switch,
 .refresh-control .refresh-interval {
   display: flex;
   align-items: center;
 }
 
-.refresh-control .refresh-button {
-  display: flex;
-  align-items: center;
+.refresh-control .refresh-button .ant-btn {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  border: none;
+  color: var(--color-primary);
+  transition: all 0.2s ease;
+}
+
+.refresh-control .refresh-button .ant-btn:hover {
+  background: rgba(37, 99, 235, 0.16);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+}
+
+.refresh-control .refresh-switch .ant-switch {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.refresh-control .refresh-switch .ant-switch-checked {
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32);
+}
+
+.refresh-control .refresh-interval .ant-select {
+  min-width: 100px;
+}
+
+.refresh-control .refresh-interval .ant-select-selector {
+  border-radius: 12px !important;
+  border: none !important;
+  background: rgba(37, 99, 235, 0.06) !important;
+}
+
+.refresh-control .refresh-interval .ant-select-arrow {
+  color: var(--color-primary);
 }
 
 .refresh-control .refresh-status {
   display: flex;
   align-items: center;
   font-size: 12px;
-  color: #666;
-}
-
-.refresh-control .refresh-indicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  color: var(--color-text-secondary);
+  gap: 6px;
 }
 
 .refresh-control .refresh-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #52c41a;
+  background-color: #22c55e;
   animation: refresh-pulse 2s infinite;
 }
 
@@ -47,7 +78,7 @@
   }
   50% {
     opacity: 0.6;
-    transform: scale(1.2);
+    transform: scale(1.25);
   }
   100% {
     opacity: 1;
@@ -55,35 +86,33 @@
   }
 }
 
-/* Value change animations for data displays */
 .value-increase {
-  background-color: rgba(255, 77, 79, 0.1) !important;
-  transition: background-color 2s ease-out;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.1)) !important;
+  transition: background 2s ease-out;
 }
 
 .value-decrease {
-  background-color: rgba(82, 196, 26, 0.1) !important;
-  transition: background-color 2s ease-out;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.1)) !important;
+  transition: background 2s ease-out;
 }
 
 .value-change-animation {
-  transition: background-color 0.3s ease-in, color 0.3s ease-in;
+  transition: background 0.3s ease-in, color 0.3s ease-in;
 }
 
-/* Table row animations */
 .table-row-increase {
-  background-color: rgba(255, 77, 79, 0.05) !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
   animation: row-flash-increase 3s ease-out;
 }
 
 .table-row-decrease {
-  background-color: rgba(82, 196, 26, 0.05) !important;
+  background-color: rgba(34, 197, 94, 0.08) !important;
   animation: row-flash-decrease 3s ease-out;
 }
 
 @keyframes row-flash-increase {
   0% {
-    background-color: rgba(255, 77, 79, 0.2);
+    background-color: rgba(239, 68, 68, 0.24);
   }
   100% {
     background-color: transparent;
@@ -92,27 +121,26 @@
 
 @keyframes row-flash-decrease {
   0% {
-    background-color: rgba(82, 196, 26, 0.2);
+    background-color: rgba(34, 197, 94, 0.24);
   }
   100% {
     background-color: transparent;
   }
 }
 
-/* Card statistics animations */
 .stat-card-increase {
-  background: linear-gradient(135deg, rgba(255, 77, 79, 0.1), rgba(255, 77, 79, 0.05));
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(239, 68, 68, 0.08));
   animation: stat-card-flash-increase 2s ease-out;
 }
 
 .stat-card-decrease {
-  background: linear-gradient(135deg, rgba(82, 196, 26, 0.1), rgba(82, 196, 26, 0.05));
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(34, 197, 94, 0.08));
   animation: stat-card-flash-decrease 2s ease-out;
 }
 
 @keyframes stat-card-flash-increase {
   0% {
-    background: linear-gradient(135deg, rgba(255, 77, 79, 0.2), rgba(255, 77, 79, 0.1));
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.26), rgba(239, 68, 68, 0.12));
   }
   100% {
     background: transparent;
@@ -121,48 +149,30 @@
 
 @keyframes stat-card-flash-decrease {
   0% {
-    background: linear-gradient(135deg, rgba(82, 196, 26, 0.2), rgba(82, 196, 26, 0.1));
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.26), rgba(34, 197, 94, 0.12));
   }
   100% {
     background: transparent;
   }
 }
 
-/* Mobile touch optimization */
 @media (max-width: 768px) {
   .refresh-control {
-    touch-action: manipulation;
-  }
-
-  .refresh-control .refresh-button {
+    gap: 8px;
+    padding: 6px 10px;
     touch-action: manipulation;
   }
 
   .refresh-control .refresh-button .ant-btn {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
     min-width: 32px !important;
     min-height: 32px !important;
     padding: 4px !important;
   }
 
-  .refresh-control .refresh-switch .ant-switch {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
   .refresh-control .refresh-interval .ant-select {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    min-width: 88px;
   }
 
-  /* 确保z-index足够高 */
-  .refresh-control {
-    position: relative;
-    z-index: 10;
-  }
-
-  /* 移除可能干扰的Tooltip在移动端的行为 */
   .refresh-control .ant-tooltip {
     pointer-events: none;
   }

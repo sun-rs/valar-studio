@@ -17,8 +17,7 @@ import {
   Tag,
   DatePicker,
   Statistic,
-  Radio,
-  InputNumber
+  Radio
 } from 'antd';
 import {
   PlusOutlined,
@@ -39,38 +38,6 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { formatBackendDate, formatDateWithFallback } from '../../utils/dateFormat';
 
-// 解析用户代理字符串，提取设备信息
-const parseUserAgent = (userAgent: string) => {
-  if (!userAgent || userAgent === 'unknown') {
-    return { os: 'Unknown', browser: 'Unknown', device: 'Unknown' };
-  }
-
-  const ua = userAgent.toLowerCase();
-
-  // 检测操作系统
-  let os = 'Unknown';
-  if (ua.includes('windows')) os = 'Windows';
-  else if (ua.includes('macintosh') || ua.includes('mac os')) os = 'macOS';
-  else if (ua.includes('iphone')) os = 'iPhone';
-  else if (ua.includes('ipad')) os = 'iPad';
-  else if (ua.includes('android')) os = 'Android';
-  else if (ua.includes('linux')) os = 'Linux';
-
-  // 检测浏览器
-  let browser = 'Unknown';
-  if (ua.includes('chrome') && !ua.includes('edg')) browser = 'Chrome';
-  else if (ua.includes('firefox')) browser = 'Firefox';
-  else if (ua.includes('safari') && !ua.includes('chrome')) browser = 'Safari';
-  else if (ua.includes('edg')) browser = 'Edge';
-  else if (ua.includes('opera')) browser = 'Opera';
-
-  // 检测设备类型
-  let device = 'Desktop';
-  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) device = 'Mobile';
-  else if (ua.includes('tablet') || ua.includes('ipad')) device = 'Tablet';
-
-  return { os, browser, device };
-};
 import './index.css';
 
 const { TabPane } = Tabs;
@@ -516,7 +483,7 @@ const Settings: React.FC = () => {
       key: 'user_agent',
       width: 300,
       ellipsis: true,
-      render: (userAgent: string, record: AccessLog) => {
+      render: (userAgent: string) => {
         // 显示所有用户的真实用户代理信息（包括授权用户）
         if (!userAgent || userAgent === 'unknown') {
           return <span style={{ color: '#999' }}>未知</span>;
@@ -543,10 +510,6 @@ const Settings: React.FC = () => {
 
   return (
     <div className="settings">
-      <div className="settings-header">
-        <h2>设置</h2>
-      </div>
-
       <Card className="settings-content">
         <Tabs defaultActiveKey="profile">
           {/* 个人设置 */}
@@ -671,9 +634,9 @@ const Settings: React.FC = () => {
             <TabPane tab="安全日志" key="security" icon={<SecurityScanOutlined />}>
               {/* 统计信息 */}
               {securityStats && (
-                <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Row gutter={16} className="settings-stats">
                   <Col span={6}>
-                    <Card>
+                    <Card className="settings-stat-card">
                       <Statistic
                         title="总登录尝试"
                         value={securityStats.total_login_attempts}
@@ -682,7 +645,7 @@ const Settings: React.FC = () => {
                     </Card>
                   </Col>
                   <Col span={6}>
-                    <Card>
+                    <Card className="settings-stat-card">
                       <Statistic
                         title="失败尝试"
                         value={securityStats.failed_login_attempts}
@@ -691,7 +654,7 @@ const Settings: React.FC = () => {
                     </Card>
                   </Col>
                   <Col span={6}>
-                    <Card>
+                    <Card className="settings-stat-card">
                       <Statistic
                         title="唯一IP"
                         value={securityStats.unique_ips}
@@ -700,7 +663,7 @@ const Settings: React.FC = () => {
                     </Card>
                   </Col>
                   <Col span={6}>
-                    <Card>
+                    <Card className="settings-stat-card">
                       <Statistic
                         title="被封IP"
                         value={securityStats.blocked_ips}
@@ -712,8 +675,8 @@ const Settings: React.FC = () => {
               )}
 
               {/* 控制面板 */}
-              <Card style={{ marginBottom: 16 }}>
-                <Row gutter={16} align="middle">
+              <Card className="security-filter-card" style={{ marginBottom: 16 }}>
+                <Row gutter={16} align="middle" className="security-toolbar">
                   <Col span={8}>
                     <Space>
                       <span>日期范围:</span>

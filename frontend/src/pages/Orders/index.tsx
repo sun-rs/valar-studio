@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Card, Table, Tabs, DatePicker, Button, Space, Tag, Row, Col, Progress, Switch } from 'antd';
+import { Card, Table, Tabs, DatePicker, Button, Space, Tag, Row, Col, Progress, Switch, Tooltip } from 'antd';
 import { CalendarOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { ordersService, Order, Trade } from '../../services/orders';
 import { positionsService } from '../../services/positions';
-import { useAuthStore } from '../../stores/authStore';
 import { useRefreshStore } from '../../stores/refreshStore';
 import AccountSelector from '../../components/AccountSelector';
 import dayjs, { Dayjs } from 'dayjs';
@@ -12,7 +11,6 @@ import './index.css';
 const { TabPane } = Tabs;
 
 const Orders: React.FC = () => {
-  const { user } = useAuthStore();
   const { setCurrentPage, setOrdersRefresh } = useRefreshStore();
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
@@ -121,6 +119,8 @@ const Orders: React.FC = () => {
         return 'order-partial';
       case '已撤销':
         return 'order-cancelled';
+      case '拒单':
+        return 'order-rejected';
       default:
         return '';
     }
@@ -160,8 +160,6 @@ const Orders: React.FC = () => {
     }
 
     // 计算成交统计
-    const totalTraded = orderTrades.reduce((sum, trade) => sum + trade.volume, 0);
-    const remainingVolume = record.volume - record.traded;
     const tradeProgress = (record.traded / record.volume) * 100;
 
     // 成交明细表格列配置
@@ -209,11 +207,12 @@ const Orders: React.FC = () => {
             rowKey="tradeid"
             pagination={false}
             size="small"
+            className="dense-table"
             style={{
               background: 'white',
               border: 'none'
             }}
-            scroll={{ x: 520 }}
+            scroll={{ x: 'max-content' }}
             bordered={false}
           />
         </div>
@@ -242,13 +241,13 @@ const Orders: React.FC = () => {
       title: '合约代码',
       dataIndex: 'code',
       key: 'code',
-      width: 120,
+      width: 110,
     },
     {
       title: '交易所',
       dataIndex: 'exchange',
       key: 'exchange',
-      width: 100,
+      width: 90,
     },
     {
       title: '方向',
@@ -272,7 +271,7 @@ const Orders: React.FC = () => {
       dataIndex: 'price',
       key: 'price',
       align: 'right' as const,
-      width: 100,
+      width: 90,
       render: (value: number) => value.toFixed(2),
     },
     {
@@ -280,21 +279,21 @@ const Orders: React.FC = () => {
       dataIndex: 'volume',
       key: 'volume',
       align: 'right' as const,
-      width: 80,
+      width: 70,
     },
     {
       title: '已成交',
       dataIndex: 'traded',
       key: 'traded',
       align: 'right' as const,
-      width: 80,
+      width: 90,
       render: (traded: number, record: Order) => `${traded}/${record.volume}`,
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      width: 100,
+      width: 90,
       render: (status: string) => (
         <Tag color={getStatusColor(status)}>{status}</Tag>
       ),
@@ -303,25 +302,35 @@ const Orders: React.FC = () => {
       title: '订单号',
       dataIndex: 'order_id',
       key: 'order_id',
-      width: 200,
+      width: 160,
     },
     {
       title: '创建时间',
       dataIndex: 'createtime',
       key: 'createtime',
-      width: 180,
+      width: 160,
+      ellipsis: true,
       sorter: (a: Order, b: Order) => dayjs(a.createtime).unix() - dayjs(b.createtime).unix(),
       showSorterTooltip: false,
-      render: (text: string) => dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
+      render: (text: string) => (
+        <Tooltip title={dayjs(text).format('YYYY-MM-DD HH:mm:ss')} placement="topRight">
+          {dayjs(text).format('MM-DD HH:mm:ss')}
+        </Tooltip>
+      ),
     },
     {
       title: '更新时间',
       dataIndex: 'updatetime',
       key: 'updatetime',
-      width: 180,
+      width: 160,
+      ellipsis: true,
       sorter: (a: Order, b: Order) => dayjs(a.updatetime).unix() - dayjs(b.updatetime).unix(),
       showSorterTooltip: false,
-      render: (text: string) => dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
+      render: (text: string) => (
+        <Tooltip title={dayjs(text).format('YYYY-MM-DD HH:mm:ss')} placement="topRight">
+          {dayjs(text).format('MM-DD HH:mm:ss')}
+        </Tooltip>
+      ),
     },
   ];
 
@@ -399,9 +408,9 @@ const Orders: React.FC = () => {
 
   return (
     <div className="orders">
-      <div className="orders-header">
-        <h2>订单管理</h2>
-        <Space>
+      <div className="orders-toolbar">
+        <span className="toolbar-label">筛选条件</span>
+        <Space size={12} wrap className="orders-actions">
           <Switch
             checked={isSpecialFilter}
             onChange={setIsSpecialFilter}
@@ -424,43 +433,49 @@ const Orders: React.FC = () => {
         </Space>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <AccountSelector
-            accounts={permittedAccounts}
-            selectedAccounts={selectedAccounts}
-            onChange={setSelectedAccounts}
-            loading={false}
-          />
-        </Col>
-        <Col span={24}>
-          <Card title={`订单数据 (${selectedAccounts.length}个账户, ${selectedDate.format('YYYY-MM-DD')})`}>
-            <Tabs activeKey={activeTab} onChange={setActiveTab}>
+      <div className="orders-body">
+        <Row gutter={[16, 16]}>
+          <Col span={24}>
+            <AccountSelector
+              accounts={permittedAccounts}
+              selectedAccounts={selectedAccounts}
+              onChange={setSelectedAccounts}
+              loading={false}
+            />
+          </Col>
+          <Col span={24}>
+            <Card
+              className="orders-table-card"
+              title={`订单数据 (${selectedAccounts.length}个账户, ${selectedDate.format('YYYY-MM-DD')})`}
+            >
+              <Tabs activeKey={activeTab} onChange={setActiveTab}>
               <TabPane tab={`委托单 (${orders.length})`} key="orders">
-                <Table
-                  columns={orderColumns}
-                  dataSource={orders}
-                  rowKey="order_id"
-                  rowClassName={getRowClassName}
-                  loading={loading}
-                  pagination={false}
-                  scroll={{ x: 1500 }}
-                  size="middle"
-                  expandable={{
-                    expandedRowRender: renderTradeDetails,
+              <Table
+                columns={orderColumns}
+                dataSource={orders}
+                rowKey="order_id"
+                rowClassName={getRowClassName}
+                loading={loading}
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+                size="small"
+                className="dense-table"
+                expandable={{
+                  expandedRowRender: renderTradeDetails,
                     rowExpandable: (record) => record.traded > 0,
                     expandRowByClick: true,  // 允许点击整行展开
                     expandIcon: ({ expanded, onExpand, record }) =>
                       record.traded > 0 ? (
-                        expanded ? (
-                          <MinusOutlined
-                            style={{ color: '#1890ff', fontSize: '12px' }}
-                          />
-                        ) : (
-                          <PlusOutlined
-                            style={{ color: '#1890ff', fontSize: '12px' }}
-                          />
-                        )
+                        <span
+                          className="orders-expand-icon"
+                          onClick={(event) => onExpand(record, event)}
+                        >
+                          {expanded ? (
+                            <MinusOutlined style={{ color: '#1890ff', fontSize: '12px' }} />
+                          ) : (
+                            <PlusOutlined style={{ color: '#1890ff', fontSize: '12px' }} />
+                          )}
+                        </span>
                       ) : null  // 无成交记录不显示图标
                   }}
                   onRow={(record) => ({
@@ -472,20 +487,22 @@ const Orders: React.FC = () => {
                 />
               </TabPane>
               <TabPane tab={`成交单 (${trades.length})`} key="trades">
-                <Table
-                  columns={tradeColumns}
-                  dataSource={trades}
-                  rowKey="tradeid"
-                  loading={loading}
-                  pagination={false}
-                  scroll={{ x: 1300 }}
-                  size="middle"
-                />
-              </TabPane>
+              <Table
+                columns={tradeColumns}
+                dataSource={trades}
+                rowKey="tradeid"
+                loading={loading}
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+                size="small"
+                className="dense-table"
+              />
+            </TabPane>
             </Tabs>
-          </Card>
-        </Col>
-      </Row>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 };

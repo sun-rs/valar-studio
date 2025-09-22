@@ -1,40 +1,126 @@
 .account-config {
-  height: 100%;
-}
-
-.account-config-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  background: white;
-  padding: 16px 24px;
-  border-radius: 8px;
-}
-
-.account-config-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .account-config-content {
-  background: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  width: 100%;
 }
 
 .account-config-content .ant-tabs-nav {
   margin-bottom: 0;
+  padding: 0 24px;
 }
 
-/* Mobile Responsive Styles */
+.account-config-content .ant-tabs-tab {
+  font-weight: 500;
+}
+
+.account-config-content .ant-tabs-content-holder {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.account-config-content .ant-table {
+  background: transparent;
+}
+
+.account-config-content .ant-table-title {
+  font-weight: 600;
+}
+
+.account-config-content .ant-form-item-label > label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.account-config-permission-panel {
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.account-config-permission-panel .ant-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.account-config-panel {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.account-config-panel .ant-card-head {
+  background: linear-gradient(120deg, rgba(37, 99, 235, 0.12), rgba(129, 140, 248, 0.08));
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.account-config-panel .ant-card-body {
+  padding: 20px;
+}
+
+.account-config-checkbox-group {
+  width: 100%;
+}
+
+.account-config-checkbox {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(248, 250, 252, 0.6);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.account-config-checkbox:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+}
+
+.account-config-checkbox.ant-checkbox-wrapper-checked {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.12);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.18);
+}
+
+.account-config-checkbox strong {
+  color: var(--color-text-primary);
+}
+
+.account-config-checkbox .account-config-checkbox-meta {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.account-config-empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 48px 16px;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+}
+
 @media (max-width: 768px) {
-  .account-config-header {
-    padding: 12px 16px;
+  .account-config-content .ant-tabs-nav {
+    padding: 0 12px;
   }
 
-  .account-config-header h2 {
-    font-size: 18px;
+  .account-config-content .ant-tabs-content-holder {
+    padding: 16px;
   }
 
   .account-config-content .ant-tabs-tab {
@@ -46,7 +132,6 @@
     font-size: 12px;
   }
 
-  /* Make form fields full width on mobile */
   .ant-form-item .ant-input,
   .ant-form-item .ant-input-password,
   .ant-form-item .ant-select,

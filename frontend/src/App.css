@@ -1,148 +1,187 @@
-/* Global styles for the application */
+/* Global app-level overrides for Ant Design */
 
-/* Remove default margins and paddings */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Ensure full height layout */
-#root {
-  min-height: 100vh;
-  width: 100%;
-}
-
-/* Ant Design overrides */
 .ant-layout {
   min-height: 100vh;
+  background: transparent;
 }
 
-/* Loading spinner centering */
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
+  min-height: 320px;
 }
 
-/* Table styles */
-.ant-table-wrapper {
-  background: white;
-  border-radius: 8px;
-}
-
-/* Card styles */
 .ant-card {
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: var(--glass-blur);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.ant-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+.ant-card-head {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: linear-gradient(120deg, rgba(99, 102, 241, 0.08), rgba(14, 165, 233, 0.04));
+}
+
+.ant-table-wrapper {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.ant-table {
+  background: var(--color-surface-solid);
+}
+
+.ant-table-thead > tr > th {
+  background: rgba(241, 245, 249, 0.9) !important;
+  color: #0f172a !important;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(209, 213, 219, 0.7);
+}
+
+.ant-table-tbody > tr > td {
+  border-color: rgba(226, 232, 240, 0.6);
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(37, 99, 235, 0.05) !important;
+}
+
+.dense-table .ant-table-thead > tr > th,
+.dense-table .ant-table-tbody > tr > td {
+  padding: 10px 12px !important;
+}
+
+.dense-table .ant-table-tbody > tr > td {
+  font-size: 13px;
+}
+
+.dense-table .ant-table-thead > tr > th {
+  font-size: 13px;
+}
+
+.dense-table .numeric-cell {
+  display: inline-block;
+  min-width: 72px;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ant-pagination-item-active {
+  border-color: var(--color-primary);
+}
+
+.ant-pagination-item-active a {
+  color: var(--color-primary);
+}
+
+.ant-statistic-title {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.ant-statistic-content {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.ant-tag {
+  border-radius: 999px;
+  padding: 0 12px;
+  font-weight: 500;
+}
+
+.ant-badge-count {
+  box-shadow: none;
+}
+
+.ant-modal-content {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: var(--glass-blur);
 }
 
 /* Profit/Loss text colors - Chinese market conventions */
 .text-profit {
-  color: #f5222d; /* 中国市场：盈利用红色 */
-  font-weight: 500;
+  color: #ef4444;
+  font-weight: 600;
 }
 
 .text-loss {
-  color: #52c41a; /* 中国市场：亏损用绿色 */
-  font-weight: 500;
+  color: #16a34a;
+  font-weight: 600;
 }
 
-/* Status colors */
 .status-success {
-  color: #52c41a;
+  color: #16a34a;
 }
 
 .status-error {
-  color: #f5222d;
+  color: #ef4444;
 }
 
 .status-warning {
-  color: #faad14;
+  color: #f79009;
 }
 
 .status-info {
-  color: #1890ff;
+  color: #0ea5e9;
 }
 
-/* Global responsive styles */
 @media (max-width: 768px) {
-  /* Make tables scrollable on mobile */
   .ant-table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Adjust modal width on mobile */
-  .ant-modal {
-    max-width: calc(100vw - 32px) !important;
-    margin: 16px auto;
-  }
-
-  .ant-modal-body {
+  .ant-card-body {
     padding: 16px;
   }
 
-  /* Adjust card padding on mobile */
-  .ant-card-body {
-    padding: 12px;
-  }
-
-  /* Make buttons more touch-friendly */
   .ant-btn {
     min-height: 36px;
     touch-action: manipulation;
   }
 
-  /* Adjust spacing on mobile */
   .ant-space {
-    gap: 8px !important;
+    gap: 10px !important;
   }
 
-  /* Make form labels stack on mobile */
+  .ant-modal {
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px auto;
+  }
+
   .ant-form-vertical .ant-form-item-label {
     padding-bottom: 4px;
   }
 
-  /* Adjust dropdown width on mobile */
   .ant-select-dropdown {
-    max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 36px);
   }
 
-  /* Hide table pagination text on mobile */
   .ant-pagination-total-text {
     display: none;
   }
 
-  /* Improve touch targets */
-  .ant-checkbox-wrapper,
-  .ant-radio-wrapper {
-    padding: 8px;
-  }
-
-  /* Make date picker full width on mobile */
-  .ant-picker {
-    width: 100%;
-  }
-
-  /* Adjust font sizes for better readability */
-  .ant-statistic-title {
-    font-size: 12px;
-  }
-
-  .ant-statistic-content {
-    font-size: 20px;
-  }
-
-  /* Improve scrollbar visibility on mobile */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 3px;
+  .ant-picker,
+  .ant-select,
+  .ant-input,
+  .ant-input-number {
+    width: 100% !important;
   }
 }

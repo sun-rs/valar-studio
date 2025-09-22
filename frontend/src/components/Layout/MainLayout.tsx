@@ -28,6 +28,7 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [menuKey, setMenuKey] = useState(0); // 用于强制重渲染
 
   useEffect(() => {
     const checkMobile = () => {
@@ -50,7 +51,7 @@ const MainLayout: React.FC = () => {
 
   // Auto refresh timer
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setInterval>;
 
     if (isEnabled && interval > 0) {
       timer = setInterval(() => {
@@ -78,6 +79,14 @@ const MainLayout: React.FC = () => {
     if (isMobile) {
       setDrawerVisible(false);
     }
+  };
+
+  const handleCollapse = () => {
+    setCollapsed(!collapsed);
+    // 延迟触发菜单重渲染，确保折叠动画完成后重绘
+    setTimeout(() => {
+      setMenuKey(prev => prev + 1);
+    }, 250);
   };
 
   const menuItems = [
@@ -118,6 +127,9 @@ const MainLayout: React.FC = () => {
     label: '设置',
   });
 
+  const activeMenu = menuItems.find(item => item.key === location.pathname);
+  const pageTitle = activeMenu?.label || '控制中心';
+
   const userMenuItems = [
     {
       key: 'profile',
@@ -144,14 +156,24 @@ const MainLayout: React.FC = () => {
   const siderContent = (
     <>
       <div className="logo">
-        <h3>{collapsed && !isMobile ? 'V' : 'Valar'}</h3>
+        <div className="logo-mark">V</div>
+        {!collapsed || isMobile ? (
+          <div className="logo-text">
+            <span className="logo-title">Valar</span>
+            <span className="logo-subtitle">Quant Studio</span>
+          </div>
+        ) : null}
       </div>
       <Menu
-        theme="dark"
+        key={menuKey}
+        theme="light"
         mode="inline"
         selectedKeys={[location.pathname]}
         items={menuItems}
         onClick={handleMenuClick}
+        className="main-menu"
+        inlineCollapsed={collapsed && !isMobile}
+        forceSubMenuRender={true}
       />
     </>
   );
@@ -163,7 +185,7 @@ const MainLayout: React.FC = () => {
           trigger={null}
           collapsible
           collapsed={collapsed}
-          theme="dark"
+          theme="light"
           width={240}
           collapsedWidth={80}
           className="desktop-sider"
@@ -177,7 +199,7 @@ const MainLayout: React.FC = () => {
           onClose={() => setDrawerVisible(false)}
           closable={false}
           width={240}
-          bodyStyle={{ padding: 0, background: '#001529' }}
+          bodyStyle={{ padding: 0, background: 'transparent' }}
           className="mobile-drawer"
         >
           {siderContent}
@@ -190,9 +212,13 @@ const MainLayout: React.FC = () => {
               isMobile ? MenuOutlined : (collapsed ? MenuUnfoldOutlined : MenuFoldOutlined),
               {
                 className: 'trigger',
-                onClick: () => isMobile ? setDrawerVisible(true) : setCollapsed(!collapsed),
+                onClick: () => isMobile ? setDrawerVisible(true) : handleCollapse(),
               }
             )}
+            <div className="header-title">
+              <span className="title-main">{pageTitle}</span>
+            <span className="title-sub">Valar Studio Module</span>
+            </div>
           </div>
           <div className="header-right">
             <Space size="middle">
@@ -212,7 +238,9 @@ const MainLayout: React.FC = () => {
           </div>
         </Header>
         <Content className="layout-content">
-          <Outlet />
+          <div className="content-wrapper">
+            <Outlet />
+          </div>
         </Content>
       </Layout>
     </Layout>

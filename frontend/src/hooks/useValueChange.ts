@@ -21,7 +21,7 @@ export const useValueChange = (
   const previousValue = useRef<number | undefined>(undefined);
   const [changeType, setChangeType] = useState<ValueChangeType>('none');
   const [isAnimating, setIsAnimating] = useState(false);
-  const animationTimeoutRef = useRef<NodeJS.Timeout>();
+  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (value === undefined) {

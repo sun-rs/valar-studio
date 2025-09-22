@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Space, Button, Switch, Tag, Spin, Select } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Card, Row, Col, Statistic, Table, Space, Spin, Select, Tooltip } from 'antd';
 import {
   DollarOutlined,
   RiseOutlined,
   BankOutlined,
   WalletOutlined,
-  ReloadOutlined,
   LineChartOutlined,
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
@@ -22,7 +21,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [historyData, setHistoryData] = useState<AccountHistoryData[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyDays, setHistoryDays] = useState(5);
+  const [historyDays, setHistoryDays] = useState(3);
   const [selectedAccountForHistory, setSelectedAccountForHistory] = useState<string | undefined>(undefined);
 
   const fetchData = async () => {
@@ -76,18 +75,104 @@ const Dashboard: React.FC = () => {
     fetchHistoryData();
   }, [historyDays, selectedAccountForHistory]);
 
-  // 移除自动选择逻辑，默认不选择任何账户以提高刷新效率
+  // 货币格式化工具
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('zh-CN', {
+        style: 'currency',
+        currency: 'CNY',
+        minimumFractionDigits: 2,
+      }),
+    []
+  );
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('zh-CN', {
-      style: 'currency',
-      currency: 'CNY',
-      minimumFractionDigits: 2,
-    }).format(value);
+  const compactCurrencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('zh-CN', {
+        style: 'currency',
+        currency: 'CNY',
+        notation: 'compact',
+        maximumFractionDigits: 2,
+      }),
+    []
+  );
+
+  const currencyIntegerFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('zh-CN', {
+        style: 'currency',
+        currency: 'CNY',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }),
+    []
+  );
+
+  const formatCurrency = (value: number) => currencyFormatter.format(value);
+  const formatCompactCurrency = (value: number) => compactCurrencyFormatter.format(value);
+
+  const renderSummaryCurrency = (value: number) => {
+    const numericValue = Number.isFinite(value) ? value : 0;
+    const roundedValue = Math.round(numericValue);
+    const parts = currencyIntegerFormatter.formatToParts(roundedValue);
+
+    const sign = parts
+      .filter(part => part.type === 'minusSign')
+      .map(part => part.value)
+      .join('');
+    const symbol = parts
+      .filter(part => part.type === 'currency')
+      .map(part => part.value)
+      .join('');
+    const number = parts
+      .filter(part => part.type === 'integer' || part.type === 'group')
+      .map(part => part.value)
+      .join('');
+
+    return (
+      <span className="summary-currency">
+        {sign && <span className="summary-currency-sign">{sign}</span>}
+        {symbol && <span className="summary-currency-symbol">{symbol}</span>}
+        <span className="summary-currency-value">{number}</span>
+      </span>
+    );
   };
 
-  const formatPercent = (value: number) => {
-    return `${value.toFixed(2)}%`;
+  const formatPercent = (value: number | string | null | undefined) => {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+
+    let numericValue: number;
+
+    if (typeof value === 'string') {
+      const cleaned = value.replace(/%/g, '').trim();
+      if (!cleaned) {
+        return '-';
+      }
+      const parsed = Number(cleaned);
+      if (!Number.isFinite(parsed)) {
+        return '-';
+      }
+
+      numericValue = parsed;
+      // 如果字符串本身不包含百分号且绝对值≤1，视为小数比例，乘以100
+      if (!value.includes('%') && Math.abs(parsed) <= 1) {
+        numericValue = parsed * 100;
+      }
+    } else {
+      numericValue = value;
+      // 当为小数比例时转换为百分比
+      if (Math.abs(numericValue) <= 1) {
+        numericValue = numericValue * 100;
+      }
+    }
+
+    if (!Number.isFinite(numericValue)) {
+      return '-';
+    }
+
+    return `${numericValue.toFixed(2)}%`;
   };
 
   const columns = [
@@ -102,7 +187,7 @@ const Dashboard: React.FC = () => {
       title: '账户名称',
       dataIndex: 'account_name',
       key: 'account_name',
-      width: 150,
+      ellipsis: true,
       render: (text: string) => text || '-',
     },
     {
@@ -117,60 +202,118 @@ const Dashboard: React.FC = () => {
       dataIndex: 'float_pnl',
       key: 'float_pnl',
       align: 'right' as const,
-      render: (value: number) => (
-        <span className={value >= 0 ? 'text-profit' : 'text-loss'}>
-          {formatCurrency(value)}
-        </span>
-      ),
+      render: (value: number) => {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return '-';
+        }
+        const display = formatCompactCurrency(numericValue);
+        const title = formatCurrency(numericValue);
+        return (
+          <Tooltip title={title} placement="topRight">
+            <span className={`numeric-cell ${numericValue >= 0 ? 'text-profit' : 'text-loss'}`}>{display}</span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: '总盈亏',
       dataIndex: 'total_pnl',
       key: 'total_pnl',
       align: 'right' as const,
-      render: (value: number) => (
-        <span className={value >= 0 ? 'text-profit' : 'text-loss'}>
-          {formatCurrency(value)}
-        </span>
-      ),
+      render: (value: number) => {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return '-';
+        }
+        const display = formatCompactCurrency(numericValue);
+        const title = formatCurrency(numericValue);
+        return (
+          <Tooltip title={title} placement="topRight">
+            <span className={`numeric-cell ${numericValue >= 0 ? 'text-profit' : 'text-loss'}`}>{display}</span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: '收益率',
       dataIndex: 'profit_rate',
       key: 'profit_rate',
       align: 'right' as const,
-      render: (value: number) => (
-        <span className={value >= 0 ? 'text-profit' : 'text-loss'}>
-          {formatPercent(value)}
-        </span>
-      ),
+      render: (value: number | string) => {
+        const content = formatPercent(value);
+        if (content === '-') {
+          return <span className="numeric-cell">-</span>;
+        }
+        const numericValue = Number(
+          typeof value === 'string' ? value.replace(/%/g, '').trim() : value
+        );
+        const isPositive = Number.isFinite(numericValue) ? numericValue >= 0 : true;
+        return (
+          <span className={`numeric-cell ${isPositive ? 'text-profit' : 'text-loss'}`}>{content}</span>
+        );
+      },
     },
     {
       title: '保证金',
       dataIndex: 'margin',
       key: 'margin',
       align: 'right' as const,
-      render: formatCurrency,
+      render: (value: number) => {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return '-';
+        }
+        return (
+          <Tooltip title={formatCurrency(numericValue)} placement="topRight">
+            <span className="numeric-cell">{formatCompactCurrency(numericValue)}</span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: '保证金率',
       dataIndex: 'margin_rate',
       key: 'margin_rate',
       align: 'right' as const,
+      render: (value: number | string) => {
+        const content = formatPercent(value);
+        return <span className="numeric-cell">{content}</span>;
+      },
     },
     {
       title: '可用资金',
       dataIndex: 'available',
       key: 'available',
       align: 'right' as const,
-      render: formatCurrency,
+      render: (value: number) => {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return '-';
+        }
+        return (
+          <Tooltip title={formatCurrency(numericValue)} placement="topRight">
+            <span className="numeric-cell">{formatCompactCurrency(numericValue)}</span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: '初始资金',
       dataIndex: 'initial_capital',
       key: 'initial_capital',
       align: 'right' as const,
-      render: formatCurrency,
+      render: (value: number) => {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return '-';
+        }
+        return (
+          <Tooltip title={formatCurrency(numericValue)} placement="topRight">
+            <span className="numeric-cell">{formatCompactCurrency(numericValue)}</span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: '更新时间',
@@ -229,9 +372,6 @@ const Dashboard: React.FC = () => {
     }];
 
     // 获取选中账户的名称
-    const selectedAccount = accounts.find(acc => acc.account_id === selectedAccountForHistory);
-    const accountName = selectedAccount?.account_name || selectedAccountForHistory;
-
     return {
       tooltip: {
         trigger: 'axis',
@@ -256,10 +396,10 @@ const Dashboard: React.FC = () => {
         borderRadius: 8
       },
       grid: {
-        top: 20,  // 减少上方间距，因为没有标题了
-        left: 90,
-        right: 40,
-        bottom: 60,
+        top: 20,
+        left: 10,
+        right: 10,
+        bottom: 48,
         containLabel: true
       },
       xAxis: {
@@ -338,30 +478,43 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>仪表盘</h2>
-      </div>
-
       <Spin spinning={loading && !summary}>
         <Row gutter={[16, 16]} className="summary-cards">
           <Col xs={24} sm={12} lg={6}>
-            <Card className={useStatCardClasses(summary?.total_balance)}>
+            <Card
+              className={useStatCardClasses(summary?.total_balance)}
+              title={
+                <div className="summary-card-header">
+                  <DollarOutlined className="summary-card-icon" style={{ color: '#1890ff' }} />
+                  <span>总资产</span>
+                </div>
+              }
+            >
               <Statistic
-                title="总资产"
+                title={null}
                 value={summary?.total_balance || 0}
-                formatter={(value) => formatCurrency(Number(value))}
-                prefix={<DollarOutlined />}
+                formatter={(value) => renderSummaryCurrency(Number(value))}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card className={useStatCardClasses(summary?.net_profit)}>
+            <Card
+              className={useStatCardClasses(summary?.net_profit)}
+              title={
+                <div className="summary-card-header">
+                  <RiseOutlined
+                    className="summary-card-icon"
+                    style={{ color: (summary?.net_profit || 0) >= 0 ? '#f5222d' : '#52c41a' }}
+                  />
+                  <span>净利润</span>
+                </div>
+              }
+            >
               <Statistic
-                title="净利润"
+                title={null}
                 value={summary?.net_profit || 0}
-                formatter={(value) => formatCurrency(Number(value))}
-                prefix={<RiseOutlined />}
+                formatter={(value) => renderSummaryCurrency(Number(value))}
                 valueStyle={{
                   color: (summary?.net_profit || 0) >= 0 ? '#f5222d' : '#52c41a', // 中国市场：正数红色，负数绿色
                 }}
@@ -369,23 +522,37 @@ const Dashboard: React.FC = () => {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card className={useStatCardClasses(summary?.total_margin)}>
+            <Card
+              className={useStatCardClasses(summary?.total_margin)}
+              title={
+                <div className="summary-card-header">
+                  <BankOutlined className="summary-card-icon" style={{ color: '#faad14' }} />
+                  <span>总保证金</span>
+                </div>
+              }
+            >
               <Statistic
-                title="总保证金"
+                title={null}
                 value={summary?.total_margin || 0}
-                formatter={(value) => formatCurrency(Number(value))}
-                prefix={<BankOutlined />}
+                formatter={(value) => renderSummaryCurrency(Number(value))}
                 valueStyle={{ color: '#faad14' }}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card className={useStatCardClasses(summary?.available_funds)}>
+            <Card
+              className={useStatCardClasses(summary?.available_funds)}
+              title={
+                <div className="summary-card-header">
+                  <WalletOutlined className="summary-card-icon" style={{ color: '#722ed1' }} />
+                  <span>可用资金</span>
+                </div>
+              }
+            >
               <Statistic
-                title="可用资金"
+                title={null}
                 value={summary?.available_funds || 0}
-                formatter={(value) => formatCurrency(Number(value))}
-                prefix={<WalletOutlined />}
+                formatter={(value) => renderSummaryCurrency(Number(value))}
                 valueStyle={{ color: '#722ed1' }}
               />
             </Card>
@@ -400,21 +567,22 @@ const Dashboard: React.FC = () => {
           rowKey="account_id"
           loading={loading}
           pagination={false}
-          scroll={{ x: 1500 }}
-          size="middle"
+          scroll={{ x: 'max-content' }}
+          size="small"
+          className="dense-table"
           rowClassName={(record) => useRowChangeClasses(record.balance)}
         />
       </Card>
 
       <Card
+        className="history-card"
         title={
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <LineChartOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-              账户资金曲线
+              资金曲线
             </div>
-            <Space>
-              <span style={{ fontSize: 14, color: '#666' }}>选择账户:</span>
+            <Space size={16}>
               <Select
                 value={selectedAccountForHistory}
                 onChange={setSelectedAccountForHistory}
@@ -430,7 +598,6 @@ const Dashboard: React.FC = () => {
                   }))
                 ]}
               />
-              <span style={{ fontSize: 14, color: '#666' }}>查看天数:</span>
               <Select
                 value={historyDays}
                 onChange={setHistoryDays}
@@ -448,8 +615,6 @@ const Dashboard: React.FC = () => {
             </Space>
           </div>
         }
-        className="accounts-table"
-        style={{ marginTop: 24 }}
       >
         <Spin spinning={historyLoading}>
           {!selectedAccountForHistory ? (

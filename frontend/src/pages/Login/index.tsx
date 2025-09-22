@@ -29,7 +29,7 @@ const Login: React.FC = () => {
       <div className="login-box">
         <Card className="login-card">
           <div className="login-header">
-            <h1>Valar 管理系统</h1>
+            <h1>Valar Studio</h1>
             <p>请登录您的账户</p>
           </div>
 

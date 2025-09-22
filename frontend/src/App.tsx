@@ -38,7 +38,63 @@ const App: React.FC = () => {
   }, [checkAuth]);
 
   return (
-    <ConfigProvider locale={zhCN}>
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        token: {
+          colorPrimary: '#2563eb',
+          colorInfo: '#0ea5e9',
+          colorSuccess: '#16a34a',
+          colorWarning: '#f59e0b',
+          colorError: '#ef4444',
+          colorBgLayout: '#eef2ff',
+          colorBgContainer: '#ffffff',
+          colorBorder: 'rgba(148, 163, 184, 0.28)',
+          colorTextBase: '#0f172a',
+          colorTextSecondary: '#475569',
+          fontFamily: "'Inter', 'Roboto', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+          borderRadius: 14,
+          boxShadow: '0 24px 60px rgba(15, 23, 42, 0.08)',
+        },
+        components: {
+          Layout: {
+            headerBg: 'transparent',
+            bodyBg: 'transparent',
+            siderBg: 'transparent',
+          },
+          Menu: {
+            itemSelectedBg: 'rgba(37, 99, 235, 0.12)',
+            itemSelectedColor: '#2563eb',
+            itemHoverBg: 'rgba(37, 99, 235, 0.08)',
+            itemHoverColor: '#2563eb',
+            itemBorderRadius: 12,
+          },
+          Card: {
+            borderRadiusLG: 20,
+            colorBorderSecondary: 'rgba(148, 163, 184, 0.2)',
+            headerFontSize: 16,
+          },
+          Button: {
+            controlHeight: 44,
+            borderRadius: 999,
+            fontWeight: 600,
+          },
+          Table: {
+            headerBg: 'rgba(241, 245, 249, 0.9)',
+            rowHoverBg: 'rgba(37, 99, 235, 0.05)',
+            borderColor: 'rgba(226, 232, 240, 0.6)',
+          },
+          Tabs: {
+            itemSelectedColor: '#2563eb',
+            inkBarColor: '#2563eb',
+          },
+          Dropdown: {
+            controlItemBgHover: 'rgba(37, 99, 235, 0.08)',
+            colorBgElevated: 'rgba(255, 255, 255, 0.96)',
+          },
+        },
+      }}
+    >
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />

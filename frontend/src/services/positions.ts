@@ -23,6 +23,7 @@ export interface Position {
 export interface PositionsResponse {
   positions: Position[];
   update_time: string;
+  permitted_accounts?: string[];
 }
 
 export const positionsService = {
