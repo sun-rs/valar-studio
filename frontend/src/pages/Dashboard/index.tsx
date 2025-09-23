@@ -175,6 +175,11 @@ const Dashboard: React.FC = () => {
     return `${numericValue.toFixed(2)}%`;
   };
 
+  // Calculate total float PnL from all accounts
+  const totalFloatPnl = useMemo(() => {
+    return accounts.reduce((sum, acc) => sum + (acc.float_pnl || 0), 0);
+  }, [accounts]);
+
   const columns = [
     {
       title: '账户ID',
@@ -500,6 +505,31 @@ const Dashboard: React.FC = () => {
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <Card
+              className={useStatCardClasses(totalFloatPnl)}
+              title={
+                <div className="summary-card-header">
+                  <RiseOutlined
+                    className="summary-card-icon"
+                    style={{
+                      color: totalFloatPnl >= 0 ? '#f5222d' : '#52c41a'
+                    }}
+                  />
+                  <span>浮动盈亏</span>
+                </div>
+              }
+            >
+              <Statistic
+                title={null}
+                value={totalFloatPnl}
+                formatter={(value) => renderSummaryCurrency(Number(value))}
+                valueStyle={{
+                  color: totalFloatPnl >= 0 ? '#f5222d' : '#52c41a',
+                }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card
               className={useStatCardClasses(summary?.net_profit)}
               title={
                 <div className="summary-card-header">
@@ -507,7 +537,7 @@ const Dashboard: React.FC = () => {
                     className="summary-card-icon"
                     style={{ color: (summary?.net_profit || 0) >= 0 ? '#f5222d' : '#52c41a' }}
                   />
-                  <span>净利润</span>
+                  <span>总盈亏</span>
                 </div>
               }
             >
@@ -527,33 +557,19 @@ const Dashboard: React.FC = () => {
               title={
                 <div className="summary-card-header">
                   <BankOutlined className="summary-card-icon" style={{ color: '#faad14' }} />
-                  <span>总保证金</span>
+                  <span>风险度</span>
                 </div>
               }
             >
               <Statistic
                 title={null}
-                value={summary?.total_margin || 0}
-                formatter={(value) => renderSummaryCurrency(Number(value))}
+                value={
+                  summary?.total_balance && summary?.total_balance > 0
+                    ? ((summary?.total_margin || 0) / summary.total_balance * 100)
+                    : 0
+                }
+                formatter={(value) => `${Number(value).toFixed(2)}%`}
                 valueStyle={{ color: '#faad14' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card
-              className={useStatCardClasses(summary?.available_funds)}
-              title={
-                <div className="summary-card-header">
-                  <WalletOutlined className="summary-card-icon" style={{ color: '#722ed1' }} />
-                  <span>可用资金</span>
-                </div>
-              }
-            >
-              <Statistic
-                title={null}
-                value={summary?.available_funds || 0}
-                formatter={(value) => renderSummaryCurrency(Number(value))}
-                valueStyle={{ color: '#722ed1' }}
               />
             </Card>
           </Col>
