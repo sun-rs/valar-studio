@@ -126,6 +126,37 @@
   padding: 20px;
 }
 
+/* 安全日志控制面板样式 */
+.security-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.security-control-label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.security-range-picker {
+  width: 100%;
+}
+
+.security-select {
+  width: 100%;
+}
+
+.security-buttons {
+  justify-content: flex-start;
+}
+
+.security-buttons .ant-space {
+  width: 100%;
+}
+
+
 @media (max-width: 768px) {
   .settings-content .ant-tabs-nav {
     padding: 0 12px;
@@ -153,5 +184,73 @@
   .ant-form-item .ant-select,
   .ant-form-item .ant-input-number {
     width: 100% !important;
+  }
+
+  /* 移动端统计卡片优化 */
+  .settings-stats .ant-col {
+    margin-bottom: 12px;
+  }
+
+  .settings-stat-card {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .settings-stat-card .ant-card-body {
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  .settings-stat-card .ant-statistic-title {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .settings-stat-card .ant-statistic-content {
+    font-size: 20px !important;
+  }
+
+  /* 移动端控制面板优化 */
+  .security-toolbar {
+    align-items: stretch !important;
+  }
+
+  .security-control-item {
+    margin-bottom: 8px;
+  }
+
+  .security-control-label {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .security-range-picker .ant-picker {
+    width: 100%;
+  }
+
+  .security-select {
+    width: 100%;
+  }
+
+  .security-buttons {
+    margin-top: 8px;
+  }
+
+  .security-buttons .ant-btn {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  /* 安全日志表格移动端优化 */
+  .ant-table-thead > tr > th {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+    font-size: 12px;
   }
 }

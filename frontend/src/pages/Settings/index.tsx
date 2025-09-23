@@ -634,8 +634,8 @@ const Settings: React.FC = () => {
             <TabPane tab="安全日志" key="security" icon={<SecurityScanOutlined />}>
               {/* 统计信息 */}
               {securityStats && (
-                <Row gutter={16} className="settings-stats">
-                  <Col span={6}>
+                <Row gutter={[16, 16]} className="settings-stats">
+                  <Col xs={12} sm={12} md={6}>
                     <Card className="settings-stat-card">
                       <Statistic
                         title="总登录尝试"
@@ -644,7 +644,7 @@ const Settings: React.FC = () => {
                       />
                     </Card>
                   </Col>
-                  <Col span={6}>
+                  <Col xs={12} sm={12} md={6}>
                     <Card className="settings-stat-card">
                       <Statistic
                         title="失败尝试"
@@ -653,7 +653,7 @@ const Settings: React.FC = () => {
                       />
                     </Card>
                   </Col>
-                  <Col span={6}>
+                  <Col xs={12} sm={12} md={6}>
                     <Card className="settings-stat-card">
                       <Statistic
                         title="唯一IP"
@@ -662,7 +662,7 @@ const Settings: React.FC = () => {
                       />
                     </Card>
                   </Col>
-                  <Col span={6}>
+                  <Col xs={12} sm={12} md={6}>
                     <Card className="settings-stat-card">
                       <Statistic
                         title="被封IP"
