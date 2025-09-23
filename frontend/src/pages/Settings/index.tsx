@@ -638,7 +638,7 @@ const Settings: React.FC = () => {
                   <Col xs={12} sm={12} md={6}>
                     <Card className="settings-stat-card">
                       <Statistic
-                        title="总登录尝试"
+                        title="登录尝试"
                         value={securityStats.total_login_attempts}
                         valueStyle={{ color: '#1890ff' }}
                       />
