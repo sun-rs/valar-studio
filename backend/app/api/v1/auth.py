@@ -1,11 +1,12 @@
 """Authentication endpoints."""
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from ...core.database import get_db
-from ...core.security import verify_password, create_access_token, get_password_hash
+from ...core.security import verify_password, create_access_token, get_password_hash, verify_token
 from ...core.dependencies import get_current_user, get_user_permissions
 from ...models.user import User
 from ...services.security_service import SecurityService
@@ -155,15 +156,59 @@ async def get_current_user_info(
 
 @router.get("/verify-admin")
 async def verify_admin_access(
-    current_user: User = Depends(get_current_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
 ):
-    """验证admin用户权限（用于Nginx auth_request）"""
-    # 只允许激活的admin用户访问
-    if not current_user.is_active or current_user.role.value != 'admin':
+    """验证admin用户权限（用于Nginx auth_request，支持Header和Cookie两种认证方式）"""
+    token = None
+
+    # 优先使用Authorization头
+    if credentials:
+        token = credentials.credentials
+    else:
+        # 如果没有Authorization头，尝试从cookie获取
+        token = request.cookies.get("valar_auth")
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No authentication token"
+        )
+
+    # 验证token
+    payload = verify_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is inactive"
+        )
+
+    # 检查是否为admin
+    if user.role.value != 'admin':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
         )
 
-    # 返回200状态码表示验证通过
-    return {"status": "authorized", "user": current_user.username}
+    return {"status": "authorized", "user": user.username}
