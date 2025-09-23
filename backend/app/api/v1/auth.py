@@ -8,7 +8,7 @@ from typing import List, Optional
 from ...core.database import get_db
 from ...core.security import verify_password, create_access_token, get_password_hash, verify_token
 from ...core.dependencies import get_current_user, get_user_permissions
-from ...models.user import User
+from ...models.user import User, UserRole
 from ...services.security_service import SecurityService
 
 
@@ -161,16 +161,26 @@ async def verify_admin_access(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
 ):
     """验证admin用户权限（用于Nginx auth_request，支持Header和Cookie两种认证方式）"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     token = None
+
+    # 调试：打印所有cookies和headers
+    logger.info(f"Request cookies: {dict(request.cookies)}")
+    logger.info(f"Request headers: {dict(request.headers)}")
 
     # 优先使用Authorization头
     if credentials:
         token = credentials.credentials
+        logger.info(f"Using Authorization header token: {token[:20] if token else 'None'}...")
     else:
         # 如果没有Authorization头，尝试从cookie获取
         token = request.cookies.get("valar_auth")
+        logger.info(f"Using cookie token: {token[:20] if token else 'None'}...")
 
     if not token:
+        logger.warning("No authentication token found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No authentication token"
@@ -205,7 +215,7 @@ async def verify_admin_access(
         )
 
     # 检查是否为admin
-    if user.role.value != 'admin':
+    if user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"

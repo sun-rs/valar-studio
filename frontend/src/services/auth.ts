@@ -37,7 +37,7 @@ export const authService = {
 
     // 设置cookie供Nginx使用（24小时过期）
     // 注意：这个cookie只用于直接访问外部服务时的认证，不影响正常网页使用
-    document.cookie = `valar_auth=${response.access_token}; path=/; max-age=86400; SameSite=Lax`;
+    document.cookie = `valar_auth=${response.access_token}; path=/; max-age=86400; SameSite=Lax; Secure`;
 
     return response;
   },
@@ -73,5 +73,14 @@ export const authService = {
 
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem('access_token');
+  },
+
+  // 初始化认证状态（在应用启动时调用）
+  initializeAuth: (): void => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      // 如果已经有token，确保cookie也设置了
+      document.cookie = `valar_auth=${token}; path=/; max-age=86400; SameSite=Lax; Secure`;
+    }
   }
 };

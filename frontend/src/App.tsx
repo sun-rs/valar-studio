@@ -5,6 +5,7 @@ import zhCN from 'antd/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { useAuthStore } from './stores/authStore';
+import { authService } from './services/auth';
 import MainLayout from './components/Layout/MainLayout';
 import AdminRoute from './components/AdminRoute';
 import Login from './pages/Login';
@@ -34,6 +35,8 @@ const App: React.FC = () => {
   const { checkAuth } = useAuthStore();
 
   useEffect(() => {
+    // 初始化认证状态和cookie
+    authService.initializeAuth();
     checkAuth();
   }, [checkAuth]);
 
