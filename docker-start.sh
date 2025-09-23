@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Docker-based startup script for Valar Web Management System
+# Docker-based startup script for Valar Studio Management System
 
 set -e
 

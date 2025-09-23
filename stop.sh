@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Valar Web Management System - Stop Script
+# Valar Studio Management System - Stop Script
 # This script stops both backend and frontend services
 
 set -e  # Exit on error
@@ -110,8 +110,7 @@ check_port() {
 # ASCII Art Banner
 echo "
 ╔══════════════════════════════════════════════╗
-║     停止 Valar Web 管理系统                  ║
-║     Stop Valar Web Management System         ║
+║              Valar Studio System             ║
 ╚══════════════════════════════════════════════╝
 "
 

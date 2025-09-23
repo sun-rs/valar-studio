@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Valar Web Management System - One-Click Startup Script
+# Valar Studio Management System - One-Click Startup Script
 # This script starts both backend and frontend services
 
 set -e  # Exit on error
@@ -116,8 +116,7 @@ release_port_with_sudo() {
 # ASCII Art Banner
 echo "
 ╔══════════════════════════════════════════════════════════════════╗
-║           Valar 量化交易 Web 管理系统                            ║
-║           Valar Quantitative Trading Web System                  ║
+║                       Valar Studio System                        ║
 ╚══════════════════════════════════════════════════════════════════╝
 "
 

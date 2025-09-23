@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     """Application settings."""
 
     # Application
-    APP_NAME: str = "Valar Web"
+    APP_NAME: str = "Valar Studio"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 

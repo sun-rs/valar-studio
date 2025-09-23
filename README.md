@@ -1,8 +1,8 @@
-# Valar 量化交易 Web 管理系统
+# Valar Studio
 
 ## 项目简介
 
-Valar Web 管理系统是一个专业的量化交易管理平台，为 Valar 量化交易库提供可视化的 Web 界面。系统支持多账户管理、实时数据监控、权限控制等功能。
+Valar Studio 是一个专业的量化交易管理平台，为 Valar 量化交易库提供可视化的 Web 界面。系统支持多账户管理、实时数据监控、权限控制等功能。
 
 ## 主要功能
 
@@ -134,7 +134,7 @@ cp .env.example .env
 
 | 变量 | 作用 | 默认值 |
 | ---- | ---- | ------ |
-| `APP_NAME` / `APP_VERSION` | 应用信息 | `Valar Web` / `1.0.0` |
+| `APP_NAME` / `APP_VERSION` | 应用信息 | `Valar Studio` / `1.0.0` |
 | `HOST` / `PORT` | 后端监听地址与端口 | `0.0.0.0` / `8000` |
 | `SECRET_KEY` | JWT 加密密钥（**必须修改**） | 占位值 |
 | `DEFAULT_ADMIN_*` | 初始管理员账号（**必须修改密码**） | `admin` / `change-me-now` |
@@ -179,7 +179,7 @@ cp .env.example .env
 ### 目录结构
 
 ```
-valar-web/
+valar-studio/
 ├── backend/                # 后端代码
 │   ├── app/
 │   │   ├── api/           # API 路由
@@ -317,14 +317,14 @@ A: 可以直接修改 `.env` 文件中的 `DEFAULT_ADMIN_PASSWORD`，重启服�
 
 ### Nginx认证代理集成
 
-Valar Web 提供了认证API，可以与Nginx配合使用，对其他服务进行访问控制。
+Valar Studio 提供了认证API，可以与Nginx配合使用，对其他服务进行访问控制。
 
 #### 使用场景
-保护服务器上的管理工具（如Portainer、Semaphore、JupyterLab等），只允许通过Valar Web认证的admin用户访问。
+保护服务器上的管理工具（如Portainer、Semaphore、JupyterLab等），只允许通过Valar Studio认证的admin用户访问。
 
 #### 配置步骤
 
-1. **Valar Web提供认证端点**
+1. **Valar Studio提供认证端点**
    ```
    GET /api/v1/auth/verify-admin
    ```
@@ -347,7 +347,7 @@ Valar Web 提供了认证API，可以与Nginx配合使用，对其他服务进�
            proxy_set_header Cookie $http_cookie;
        }
 
-       # Valar Web主服务
+       # Valar Studio主服务
        location / {
            proxy_pass http://localhost:3001;
            proxy_set_header Host $host;
@@ -407,12 +407,12 @@ Valar Web 提供了认证API，可以与Nginx配合使用，对其他服务进�
 
 3. **工作原理**
    - 用户访问受保护的服务（如 `/portainer/`）
-   - Nginx触发 `auth_request` 调用Valar Web验证API
-   - Valar Web验证JWT Token和admin权限
+   - Nginx触发 `auth_request` 调用Valar Studio验证API
+   - Valar Studio验证JWT Token和admin权限
    - 验证通过则允许访问，失败则重定向到登录页
 
 4. **安全特性**
-   - ✅ 统一认证：复用Valar Web用户体系
+   - ✅ 统一认证：复用Valar Studio用户体系
    - ✅ 细粒度控制：仅admin用户可访问
    - ✅ 会话同步：登出后立即失去访问权限
    - ✅ 审计记录：所有访问尝试都被记录

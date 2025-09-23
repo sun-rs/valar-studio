@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to manually cleanup ports for Valar Web System
+# Script to manually cleanup ports for Valar Studio System
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
