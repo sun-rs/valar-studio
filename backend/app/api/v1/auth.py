@@ -170,14 +170,20 @@ async def verify_admin_access(
     logger.info(f"Request cookies: {dict(request.cookies)}")
     logger.info(f"Request headers: {dict(request.headers)}")
 
-    # 优先使用Authorization头
-    if credentials:
-        token = credentials.credentials
-        logger.info(f"Using Authorization header token: {token[:20] if token else 'None'}...")
+    # 对于auth_request，优先使用cookie而不是Authorization头
+    # 因为Authorization头可能包含其他应用的token（如Semaphore）
+    cookie_token = request.cookies.get("valar_auth")
+    auth_header_token = credentials.credentials if credentials else None
+
+    # 优先使用cookie token
+    if cookie_token:
+        token = cookie_token
+        logger.info(f"Using cookie token: {token[:20]}...")
+    elif auth_header_token:
+        token = auth_header_token
+        logger.info(f"Using Authorization header token: {token[:20]}...")
     else:
-        # 如果没有Authorization头，尝试从cookie获取
-        token = request.cookies.get("valar_auth")
-        logger.info(f"Using cookie token: {token[:20] if token else 'None'}...")
+        token = None
 
     if not token:
         logger.warning("No authentication token found")
@@ -189,10 +195,13 @@ async def verify_admin_access(
     # 验证token
     payload = verify_token(token)
     if payload is None:
+        logger.warning(f"Token verification failed for token: {token[:20]}...")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
+
+    logger.info(f"Token verified successfully, payload: {payload}")
 
     user_id = payload.get("sub")
     if user_id is None:
