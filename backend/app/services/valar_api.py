@@ -45,7 +45,7 @@ def get_accounts(accounts: Dict[str, int | float]) -> pd.DataFrame:
 
     # Use .get() to handle accounts without positions (default to 0)
     acc["float_pnl"] = acc["accountid"].apply(lambda x: float_pnl.get(x, 0))
-    acc["margin%"] = (acc["margin"]/acc["balance"]).apply(lambda x: format(x, ".0%"))
+    acc["margin%"] = (acc["margin"]/acc["balance"]).apply(lambda x: format(x, ".2%"))
     acc["init_cash"] = acc["accountid"].apply(lambda x: accounts[x])
     acc["total_pnl"] = acc["balance"] - acc["init_cash"]
     acc = acc.loc[:,["accountid","balance","float_pnl","total_pnl","margin","margin%","available","init_cash","frozen","updatetime"]]

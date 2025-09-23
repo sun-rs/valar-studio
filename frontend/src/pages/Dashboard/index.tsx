@@ -212,12 +212,9 @@ const Dashboard: React.FC = () => {
         if (!Number.isFinite(numericValue)) {
           return '-';
         }
-        const display = formatCompactCurrency(numericValue);
-        const title = formatCurrency(numericValue);
+        const display = formatCurrency(numericValue);
         return (
-          <Tooltip title={title} placement="topRight">
-            <span className={`numeric-cell ${numericValue >= 0 ? 'text-profit' : 'text-loss'}`}>{display}</span>
-          </Tooltip>
+          <span className={`numeric-cell ${numericValue >= 0 ? 'text-profit' : 'text-loss'}`}>{display}</span>
         );
       },
     },
@@ -231,12 +228,9 @@ const Dashboard: React.FC = () => {
         if (!Number.isFinite(numericValue)) {
           return '-';
         }
-        const display = formatCompactCurrency(numericValue);
-        const title = formatCurrency(numericValue);
+        const display = formatCurrency(numericValue);
         return (
-          <Tooltip title={title} placement="topRight">
-            <span className={`numeric-cell ${numericValue >= 0 ? 'text-profit' : 'text-loss'}`}>{display}</span>
-          </Tooltip>
+          <span className={`numeric-cell ${numericValue >= 0 ? 'text-profit' : 'text-loss'}`}>{display}</span>
         );
       },
     },
@@ -270,9 +264,7 @@ const Dashboard: React.FC = () => {
           return '-';
         }
         return (
-          <Tooltip title={formatCurrency(numericValue)} placement="topRight">
-            <span className="numeric-cell">{formatCompactCurrency(numericValue)}</span>
-          </Tooltip>
+          <span className="numeric-cell">{formatCurrency(numericValue)}</span>
         );
       },
     },
