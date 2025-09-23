@@ -234,13 +234,7 @@ valar-web/
    chmod 600 backend/data/valar.db
    ```
 
-3. **CORS配置**
-   ```env
-   # 生产环境请替换为实际域名
-   CORS_ORIGINS=["https://yourdomain.com"]
-   ```
-
-4. **HTTPS配置**
+3. **HTTPS配置**
    - 生产环境强烈建议启用HTTPS
    - 可使用Nginx反向代理配置SSL证书
 
