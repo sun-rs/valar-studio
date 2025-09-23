@@ -35,8 +35,7 @@ export const authService = {
     // Store user info
     localStorage.setItem('user', JSON.stringify(response.user));
 
-    // 设置cookie供Nginx使用（24小时过期）
-    // 注意：这个cookie只用于直接访问外部服务时的认证，不影响正常网页使用
+    // 设置cookie供Nginx auth_request使用（用于直接访问外部服务如Portainer、Semaphore）
     document.cookie = `valar_auth=${response.access_token}; path=/; max-age=86400; SameSite=Lax; Secure`;
 
     return response;
