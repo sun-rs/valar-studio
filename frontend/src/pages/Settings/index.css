@@ -138,6 +138,7 @@
   font-weight: 500;
   color: var(--color-text-secondary);
   white-space: nowrap;
+  display: block;
 }
 
 .security-range-picker {
@@ -156,8 +157,69 @@
   width: 100%;
 }
 
+.security-buttons-container {
+  justify-content: flex-start;
+}
 
-@media (max-width: 768px) {
+/* PC端样式 - 确保所有元素在同一行 */
+@media (min-width: 768px) {
+  .security-toolbar {
+    align-items: center !important;
+  }
+
+  .security-toolbar .ant-row {
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .security-control-item {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 0 !important;
+    height: auto !important;
+  }
+
+  .security-control-label {
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+    line-height: 32px;
+  }
+
+  .security-range-picker {
+    width: 240px !important;
+    flex: none;
+  }
+
+  .security-select {
+    width: auto !important;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .security-buttons-container {
+    justify-content: flex-end !important;
+    margin-top: 0 !important;
+    align-items: center !important;
+  }
+
+  /* 强制PC端所有列在同一水平线，禁止换行 */
+  .security-toolbar .ant-col {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 0 !important;
+    flex: none !important;
+  }
+
+  /* 移除PC端的垂直gutter效果 */
+  .security-toolbar.ant-row > .ant-col {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+
+@media (max-width: 767px) {
   .settings-content .ant-tabs-nav {
     padding: 0 12px;
   }
@@ -218,27 +280,36 @@
   }
 
   .security-control-item {
-    margin-bottom: 8px;
+    margin-bottom: 16px !important;
+    flex-direction: column !important;
+    gap: 8px !important;
   }
 
   .security-control-label {
-    font-size: 14px;
-    margin-bottom: 6px;
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+    white-space: nowrap !important;
+  }
+
+  .security-range-picker {
+    width: 100% !important;
   }
 
   .security-range-picker .ant-picker {
-    width: 100%;
+    width: 100% !important;
   }
 
   .security-select {
-    width: 100%;
+    width: 100% !important;
   }
 
-  .security-buttons {
+  .security-buttons-container {
+    justify-content: flex-start !important;
     margin-top: 8px;
   }
 
-  .security-buttons .ant-btn {
+  .security-buttons-container .ant-btn {
     flex: 1;
     min-width: 80px;
   }
@@ -252,5 +323,14 @@
   .ant-table-tbody > tr > td {
     padding: 8px 4px;
     font-size: 12px;
+  }
+
+  /* 确保移动端每个控制项单独一行 */
+  .security-toolbar .ant-col {
+    margin-bottom: 12px;
+  }
+
+  .security-toolbar .ant-col:last-child {
+    margin-bottom: 0;
   }
 }

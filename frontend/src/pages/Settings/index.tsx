@@ -493,7 +493,7 @@ const Settings: React.FC = () => {
       },
     },
     {
-      title: '响应时间(ms)',
+      title: '响应时间',
       dataIndex: 'response_time_ms',
       key: 'response_time_ms',
       width: 100,
@@ -677,9 +677,9 @@ const Settings: React.FC = () => {
               {/* 控制面板 */}
               <Card className="security-filter-card" style={{ marginBottom: 16 }}>
                 <Row gutter={16} align="middle" className="security-toolbar">
-                  <Col span={8}>
-                    <Space>
-                      <span>日期范围:</span>
+                  <Col xs={24} sm={24} md={8} lg={7}>
+                    <div className="security-control-item">
+                      <span className="security-control-label">日期范围:</span>
                       <DatePicker.RangePicker
                         value={dateRange}
                         onChange={(dates) => {
@@ -691,75 +691,77 @@ const Settings: React.FC = () => {
                           }
                         }}
                         format="YYYY-MM-DD"
-                        style={{ width: 240 }}
+                        className="security-range-picker"
                         allowClear={false}
                       />
-                    </Space>
+                    </div>
                   </Col>
-                  <Col span={6}>
-                    <Space>
-                      <span>日志类型:</span>
+                  <Col xs={24} sm={24} md={8} lg={8}>
+                    <div className="security-control-item">
+                      <span className="security-control-label">日志类型:</span>
                       <Select
                         value={logType}
                         onChange={setLogType}
-                        style={{ width: 160 }}
+                        className="security-select"
                       >
                         <Select.Option value="unauthorized_access">🔴 未授权访问日志</Select.Option>
                         <Select.Option value="authorized_access">🟢 授权用户访问日志</Select.Option>
                         <Select.Option value="login_attempts">🔵 登录记录</Select.Option>
                       </Select>
-                    </Space>
+                    </div>
                   </Col>
-                  <Col span={10}>
-                    <Space>
-                      <Button
-                        icon={<ReloadOutlined />}
-                        onClick={() => {
-                          // 刷新时更新日期范围结束时间到现在，保持开始时间不变
-                          const now = dayjs();
-                          setDateRange([dateRange[0], now.endOf('day')]);
-                          setPagination(prev => ({ ...prev, current: 1 }));
-                          // 直接调用API，使用最新的时间范围
-                          const query = {
-                            start_date: dateRange[0].startOf('day').toISOString(),
-                            end_date: now.endOf('day').toISOString(),
-                            page: 1,
-                            size: pagination.pageSize
-                          };
-                          setSecurityLoading(true);
-                          if (logType === 'login_attempts') {
-                            securityService.getLoginAttempts(query).then(response => {
-                              setLoginAttempts(response.records);
-                              setPagination(prev => ({ ...prev, current: 1, total: response.total }));
-                            }).catch(() => {
-                              message.error('获取安全日志失败');
-                            }).finally(() => {
-                              setSecurityLoading(false);
-                            });
-                          } else {
-                            securityService.getAccessLogs(query).then(response => {
-                              setAccessLogs(response.records);
-                              setPagination(prev => ({ ...prev, current: 1, total: response.total }));
-                            }).catch(() => {
-                              message.error('获取安全日志失败');
-                            }).finally(() => {
-                              setSecurityLoading(false);
-                            });
-                          }
-                        }}
-                        loading={securityLoading}
-                      >
-                        刷新
-                      </Button>
-                      <Button
-                        icon={<ClearOutlined />}
-                        type="primary"
-                        danger
-                        onClick={() => setCleanupModalVisible(true)}
-                      >
-                        清理旧日志
-                      </Button>
-                    </Space>
+                  <Col xs={24} sm={24} md={8} lg={9}>
+                    <div className="security-control-item security-buttons-container">
+                      <Space wrap>
+                        <Button
+                          icon={<ReloadOutlined />}
+                          onClick={() => {
+                            // 刷新时更新日期范围结束时间到现在，保持开始时间不变
+                            const now = dayjs();
+                            setDateRange([dateRange[0], now.endOf('day')]);
+                            setPagination(prev => ({ ...prev, current: 1 }));
+                            // 直接调用API，使用最新的时间范围
+                            const query = {
+                              start_date: dateRange[0].startOf('day').toISOString(),
+                              end_date: now.endOf('day').toISOString(),
+                              page: 1,
+                              size: pagination.pageSize
+                            };
+                            setSecurityLoading(true);
+                            if (logType === 'login_attempts') {
+                              securityService.getLoginAttempts(query).then(response => {
+                                setLoginAttempts(response.records);
+                                setPagination(prev => ({ ...prev, current: 1, total: response.total }));
+                              }).catch(() => {
+                                message.error('获取安全日志失败');
+                              }).finally(() => {
+                                setSecurityLoading(false);
+                              });
+                            } else {
+                              securityService.getAccessLogs(query).then(response => {
+                                setAccessLogs(response.records);
+                                setPagination(prev => ({ ...prev, current: 1, total: response.total }));
+                              }).catch(() => {
+                                message.error('获取安全日志失败');
+                              }).finally(() => {
+                                setSecurityLoading(false);
+                              });
+                            }
+                          }}
+                          loading={securityLoading}
+                        >
+                          刷新
+                        </Button>
+                        <Button
+                          icon={<ClearOutlined />}
+                          type="primary"
+                          danger
+                          onClick={() => setCleanupModalVisible(true)}
+                        >
+                          清理旧日志
+                        </Button>
+                      </Space>
+                    </div>
                   </Col>
                 </Row>
               </Card>
