@@ -96,8 +96,14 @@ async def login(
     user.last_login = datetime.utcnow()
     db.commit()
 
-    # Create access token
-    access_token_expires = timedelta(minutes=1440)  # 24 hours
+    # Create access token with different expiration based on remember_me
+    if login_request.remember_me:
+        access_token_expires = timedelta(days=30)  # 30 days if remember me is checked
+        expires_in_seconds = 30 * 24 * 60 * 60  # 30 days in seconds
+    else:
+        access_token_expires = timedelta(minutes=1440)  # 24 hours if not remembered
+        expires_in_seconds = 1440 * 60  # 24 hours in seconds
+
     access_token = create_access_token(
         data={"sub": str(user.id), "username": user.username, "role": user.role.value},
         expires_delta=access_token_expires
@@ -122,7 +128,7 @@ async def login(
     return TokenResponse(
         access_token=access_token,
         token_type="Bearer",
-        expires_in=1440 * 60,  # in seconds
+        expires_in=expires_in_seconds,  # dynamic expiration based on remember_me
         user=user_response
     )
 

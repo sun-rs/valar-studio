@@ -10,6 +10,18 @@ CLAUDE.md
 PROJECT_STATUS.md
 node_modules/
 
+# Frontend build output
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/coverage/
+
+# Frontend development files
+frontend/.next/
+frontend/out/
+frontend/storybook-static/
+*.tsbuildinfo
+
 # Environment files
 *.env
 .env

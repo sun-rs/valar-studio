@@ -35,8 +35,9 @@ export const authService = {
     // Store user info
     localStorage.setItem('user', JSON.stringify(response.user));
 
-    // 设置cookie供Nginx auth_request使用（用于直接访问外部服务如Portainer、Semaphore）
-    document.cookie = `valar_auth=${response.access_token}; path=/; max-age=86400; SameSite=Lax; Secure`;
+    // 设置cookie供Nginx auth_request使用，使用服务器返回的过期时间
+    // response.expires_in是秒数，直接用作max-age
+    document.cookie = `valar_auth=${response.access_token}; path=/; max-age=${response.expires_in}; SameSite=Lax; Secure`;
 
     return response;
   },
@@ -78,7 +79,8 @@ export const authService = {
   initializeAuth: (): void => {
     const token = localStorage.getItem('access_token');
     if (token) {
-      // 如果已经有token，确保cookie也设置了
+      // 如果已经有token，设置默认的24小时cookie
+      // 注意：这里无法知道原始的remember_me状态，所以使用默认24小时
       document.cookie = `valar_auth=${token}; path=/; max-age=86400; SameSite=Lax; Secure`;
     }
   }

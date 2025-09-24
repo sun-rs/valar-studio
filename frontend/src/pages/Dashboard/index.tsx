@@ -4,7 +4,6 @@ import {
   DollarOutlined,
   RiseOutlined,
   BankOutlined,
-  WalletOutlined,
   LineChartOutlined,
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
