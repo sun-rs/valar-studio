@@ -53,13 +53,8 @@ chmod +x start.sh stop.sh
 ```
 
 #### Windows:
-```batch
-# 启动服务
-start.bat
 
-# 停止服务
-stop.bat
-```
+当前仓库暂未提供 Windows 批处理脚本。建议使用 WSL 执行上述命令，或参考“方式三：手动启动”分别运行前后端服务。
 
 ### 方式二：Docker 启动
 
@@ -197,8 +192,6 @@ valar-studio/
 │   └── package.json
 ├── start.sh              # macOS/Linux 启动脚本
 ├── stop.sh               # macOS/Linux 停止脚本
-├── start.bat             # Windows 启动脚本
-├── stop.bat              # Windows 停止脚本
 ├── docker-compose.yml    # Docker 配置
 └── README.md            # 项目说明
 

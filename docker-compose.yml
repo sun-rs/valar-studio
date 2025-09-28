@@ -11,10 +11,9 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - valar-data:/data
-      - ./backend/valar.db:/app/valar.db
+      - ./backend/data:/app/data
     environment:
-      - DATABASE_URL=sqlite:///./valar.db
+      - DATABASE_URL=sqlite:///./data/valar.db
       - SECRET_KEY=your-secret-key-here-change-in-production
       - DEBUG=True
       - CORS_ORIGINS=http://localhost:3001,http://localhost
@@ -68,7 +67,3 @@ services:
 networks:
   valar-network:
     driver: bridge
-
-volumes:
-  valar-data:
-    driver: local
