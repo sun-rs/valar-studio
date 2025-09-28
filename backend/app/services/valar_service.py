@@ -116,30 +116,36 @@ class ValarService:
                 account_ids
             )
 
-            if df is None or df.empty:
-                return {"positions": [], "update_time": datetime.now().isoformat()}
+        except KeyError:
+            # Some upstream data sources raise KeyError when no positions exist for the accounts
+            logger.info("No positions returned for accounts %s", account_ids)
+            return {"positions": [], "update_time": datetime.now().isoformat()}
 
-            # Ensure data is sorted by margin descending (largest first)
-            # This provides protection against external library changes
-            if 'margin' in df.columns:
-                df = df.sort_values('margin', ascending=False).reset_index(drop=True)
-
-            # Convert DataFrame to list of dictionaries
-            positions = df.to_dict('records')
-
-            # Process any NaN values
-            for pos in positions:
-                for key, value in pos.items():
-                    if pd.isna(value):
-                        pos[key] = None
-
-            return {
-                "positions": positions,
-                "update_time": datetime.now().isoformat()
-            }
         except Exception as e:
             logger.error(f"Error getting positions: {e}")
             return {"positions": [], "update_time": datetime.now().isoformat()}
+
+        if df is None or df.empty:
+            return {"positions": [], "update_time": datetime.now().isoformat()}
+
+        # Ensure data is sorted by margin descending (largest first)
+        # This provides protection against external library changes
+        if 'margin' in df.columns:
+            df = df.sort_values('margin', ascending=False).reset_index(drop=True)
+
+        # Convert DataFrame to list of dictionaries
+        positions = df.to_dict('records')
+
+        # Process any NaN values
+        for pos in positions:
+            for key, value in pos.items():
+                if pd.isna(value):
+                    pos[key] = None
+
+        return {
+            "positions": positions,
+            "update_time": datetime.now().isoformat()
+        }
 
     async def get_orders(self, account_id: str, tradedate: str, is_special: bool) -> List[Dict]:
         """

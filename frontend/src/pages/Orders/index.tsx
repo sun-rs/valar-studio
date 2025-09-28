@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Card, Table, Tabs, DatePicker, Button, Space, Tag, Row, Col, Progress, Switch, Tooltip } from 'antd';
 import { CalendarOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { ordersService, Order, Trade } from '../../services/orders';
-import { positionsService } from '../../services/positions';
+import { accountConfigApi } from '../../services/accountConfig';
 import { useRefreshStore } from '../../stores/refreshStore';
 import AccountSelector from '../../components/AccountSelector';
 import dayjs, { Dayjs } from 'dayjs';
@@ -20,6 +20,7 @@ const Orders: React.FC = () => {
   const [permittedAccounts, setPermittedAccounts] = useState<string[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [isSpecialFilter, setIsSpecialFilter] = useState(false); // 特殊订单筛选开关
+  const [accountsLoading, setAccountsLoading] = useState(false);
 
   // Fetch current trade date on mount
   useEffect(() => {
@@ -38,18 +39,31 @@ const Orders: React.FC = () => {
 
   // Fetch permitted accounts from positions summary API
   const fetchPermittedAccounts = async () => {
+    setAccountsLoading(true);
     try {
-      const summaryData = await positionsService.getPositionsSummary();
-      const accounts = summaryData.permitted_accounts || [];
+      const myAccounts = await accountConfigApi.getMyAccounts();
+      const accounts = myAccounts.map(account => account.account_id);
       setPermittedAccounts(accounts);
 
-      // Auto-select all accounts by default
-      if (selectedAccounts.length === 0 && accounts.length > 0) {
-        setSelectedAccounts(accounts);
-      }
+      setSelectedAccounts(prevSelected => {
+        if (accounts.length === 0) {
+          return [];
+        }
+
+        const validSelected = prevSelected.filter(accountId => accounts.includes(accountId));
+
+        if (validSelected.length > 0) {
+          return validSelected;
+        }
+
+        return accounts;
+      });
     } catch (error) {
       console.error('Failed to fetch permitted accounts:', error);
+      setPermittedAccounts([]);
+      setSelectedAccounts([]);
     }
+    setAccountsLoading(false);
   };
 
   useEffect(() => {
@@ -440,7 +454,7 @@ const Orders: React.FC = () => {
               accounts={permittedAccounts}
               selectedAccounts={selectedAccounts}
               onChange={setSelectedAccounts}
-              loading={false}
+              loading={accountsLoading}
             />
           </Col>
           <Col span={24}>

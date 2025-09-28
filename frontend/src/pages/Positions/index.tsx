@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Card, Table, Radio, Tag, Spin, Row, Col, Tooltip } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import { positionsService, Position } from '../../services/positions';
+import { accountConfigApi } from '../../services/accountConfig';
 import { useRefreshStore } from '../../stores/refreshStore';
 import AccountSelector from '../../components/AccountSelector';
 import dayjs from 'dayjs';
@@ -14,20 +15,34 @@ const Positions: React.FC = () => {
   const [positions, setPositions] = useState<Position[]>([]);
   const [permittedAccounts, setPermittedAccounts] = useState<string[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
 
   const fetchPermittedAccounts = async () => {
+    setAccountsLoading(true);
     try {
-      const summaryData = await positionsService.getPositionsSummary();
-      const accounts = summaryData.permitted_accounts || [];
+      const myAccounts = await accountConfigApi.getMyAccounts();
+      const accounts = myAccounts.map(account => account.account_id);
       setPermittedAccounts(accounts);
 
-      // Auto-select all accounts by default
-      if (selectedAccounts.length === 0 && accounts.length > 0) {
-        setSelectedAccounts(accounts);
-      }
+      setSelectedAccounts(prevSelected => {
+        if (accounts.length === 0) {
+          return [];
+        }
+
+        const validSelected = prevSelected.filter(accountId => accounts.includes(accountId));
+
+        if (validSelected.length > 0) {
+          return validSelected;
+        }
+
+        return accounts;
+      });
     } catch (error) {
       console.error('Failed to fetch permitted accounts:', error);
+      setPermittedAccounts([]);
+      setSelectedAccounts([]);
     }
+    setAccountsLoading(false);
   };
 
   const fetchPositions = async () => {
@@ -703,7 +718,7 @@ const Positions: React.FC = () => {
               accounts={permittedAccounts}
               selectedAccounts={selectedAccounts}
               onChange={setSelectedAccounts}
-              loading={false}
+              loading={accountsLoading}
             />
           </Col>
           <Col span={24}>
