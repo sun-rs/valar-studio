@@ -18,8 +18,18 @@ class AccountPermission(Base):
     account_id = Column(String(100), nullable=False, index=True)
     permission_type = Column(String(20), default="view")  # view, trade, manage
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
-    user = relationship("User", foreign_keys=[user_id], backref="permissions")
-    creator = relationship("User", foreign_keys=[created_by])
+    user = relationship(
+        "User",
+        foreign_keys=[user_id],
+        backref="permissions",
+        passive_deletes=True,
+    )
+    creator = relationship(
+        "User",
+        foreign_keys=[created_by],
+        passive_deletes=True,
+    )
+

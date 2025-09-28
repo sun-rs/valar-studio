@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Card, Table, Tabs, DatePicker, Button, Space, Tag, Row, Col, Progress, Switch, Tooltip } from 'antd';
 import { CalendarOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { ordersService, Order, Trade } from '../../services/orders';
 import { accountConfigApi } from '../../services/accountConfig';
 import { useRefreshStore } from '../../stores/refreshStore';
+import { useAuthStore } from '../../stores/authStore';
 import AccountSelector from '../../components/AccountSelector';
 import dayjs, { Dayjs } from 'dayjs';
 import './index.css';
@@ -12,6 +13,8 @@ const { TabPane } = Tabs;
 
 const Orders: React.FC = () => {
   const { setCurrentPage, setOrdersRefresh } = useRefreshStore();
+  const user = useAuthStore(state => state.user);
+  const lastFetchedUserRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [orders, setOrders] = useState<Order[]>([]);
@@ -42,7 +45,7 @@ const Orders: React.FC = () => {
     setAccountsLoading(true);
     try {
       const myAccounts = await accountConfigApi.getMyAccounts();
-      const accounts = myAccounts.map(account => account.account_id);
+      const accounts = Array.from(new Set(myAccounts.map(account => account.account_id))).filter(Boolean);
       setPermittedAccounts(accounts);
 
       setSelectedAccounts(prevSelected => {
@@ -62,16 +65,32 @@ const Orders: React.FC = () => {
       console.error('Failed to fetch permitted accounts:', error);
       setPermittedAccounts([]);
       setSelectedAccounts([]);
+    } finally {
+      setAccountsLoading(false);
     }
-    setAccountsLoading(false);
   };
 
   useEffect(() => {
-    fetchPermittedAccounts();
     // Set current page and refresh function
     setCurrentPage('/orders');
     setOrdersRefresh(fetchData);
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setPermittedAccounts([]);
+      setSelectedAccounts([]);
+      lastFetchedUserRef.current = null;
+      return;
+    }
+
+    if (lastFetchedUserRef.current === user.id) {
+      return;
+    }
+
+    lastFetchedUserRef.current = user.id;
+    fetchPermittedAccounts();
+  }, [user]);
 
   // Update refresh function when dependencies change
   useEffect(() => {

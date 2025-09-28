@@ -31,18 +31,15 @@ class SecurityLogMiddleware(BaseHTTPMiddleware):
         }
 
         # 安全敏感路径（即使已登录也要记录）
-        self.security_paths = {
+        self.security_exact_paths = {
             "/",
             "/api/v1/auth/login",
             "/api/v1/auth/logout",
-            "/api/v1/settings",
-            "/api/v1/account-config"
         }
-
-        # 只记录未授权访问的API路径模式
-        self.api_patterns = [
-            "/api/v1/",
-        ]
+        self.security_prefixes = (
+            "/api/v1/settings",
+            "/api/v1/account-config",
+        )
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         start_time = time.time()
@@ -137,4 +134,11 @@ class SecurityLogMiddleware(BaseHTTPMiddleware):
 
     def _is_security_sensitive(self, path: str) -> bool:
         """判断是否为安全敏感路径"""
-        return any(sensitive_path in path for sensitive_path in self.security_paths)
+        if path in self.security_exact_paths:
+            return True
+
+        return any(
+            path == prefix or path.startswith(f"{prefix}/")
+            for prefix in self.security_prefixes
+        )
+

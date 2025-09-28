@@ -1,7 +1,7 @@
 """Account configuration model."""
 from sqlalchemy import Column, String, Float, DateTime, JSON, Integer, ForeignKey
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from ..core.database import Base
 
 
@@ -20,7 +20,13 @@ class AccountConfig(Base):
     config = Column(JSON, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationship
-    creator = relationship("User", backref="account_configs")
+    creator = relationship(
+        "User",
+        backref=backref("account_configs", passive_deletes=True),
+        foreign_keys=[created_by],
+        passive_deletes=True,
+    )
+

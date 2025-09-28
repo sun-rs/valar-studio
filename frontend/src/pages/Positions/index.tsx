@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Card, Table, Radio, Tag, Spin, Row, Col, Tooltip } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import { positionsService, Position } from '../../services/positions';
 import { accountConfigApi } from '../../services/accountConfig';
+import { useAuthStore } from '../../stores/authStore';
 import { useRefreshStore } from '../../stores/refreshStore';
 import AccountSelector from '../../components/AccountSelector';
 import dayjs from 'dayjs';
@@ -10,6 +11,8 @@ import './index.css';
 
 const Positions: React.FC = () => {
   const { setCurrentPage, setPositionsRefresh } = useRefreshStore();
+  const user = useAuthStore(state => state.user);
+  const lastFetchedUserRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'heatmap' | 'chart'>('table');
   const [positions, setPositions] = useState<Position[]>([]);
@@ -21,7 +24,7 @@ const Positions: React.FC = () => {
     setAccountsLoading(true);
     try {
       const myAccounts = await accountConfigApi.getMyAccounts();
-      const accounts = myAccounts.map(account => account.account_id);
+      const accounts = Array.from(new Set(myAccounts.map(account => account.account_id))).filter(Boolean);
       setPermittedAccounts(accounts);
 
       setSelectedAccounts(prevSelected => {
@@ -41,8 +44,9 @@ const Positions: React.FC = () => {
       console.error('Failed to fetch permitted accounts:', error);
       setPermittedAccounts([]);
       setSelectedAccounts([]);
+    } finally {
+      setAccountsLoading(false);
     }
-    setAccountsLoading(false);
   };
 
   const fetchPositions = async () => {
@@ -70,11 +74,26 @@ const Positions: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPermittedAccounts();
     // Set current page and refresh function
     setCurrentPage('/positions');
     setPositionsRefresh(fetchData);
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setPermittedAccounts([]);
+      setSelectedAccounts([]);
+      lastFetchedUserRef.current = null;
+      return;
+    }
+
+    if (lastFetchedUserRef.current === user.id) {
+      return;
+    }
+
+    lastFetchedUserRef.current = user.id;
+    fetchPermittedAccounts();
+  }, [user]);
 
   useEffect(() => {
     fetchPositions();
