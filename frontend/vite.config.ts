@@ -55,49 +55,18 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
-    optimizeDeps: {
-      exclude: [
-        'Dockerfile',
-        '*.md',
-        '*.yml',
-        '*.yaml',
-        '*.txt',
-        '*.log',
-        '*.env',
-        '*.sh',
-        '*.py',
-        '*.sql',
-        '*.xml',
-        '*.toml',
-        '*.ini'
-      ]
-    },
     server: {
       port,
       host,
       allowedHosts,
+      hmr: { overlay: false },
+      fs: {
+        // 出于安全考虑，明确拒绝服务敏感文件是个好习惯
+        deny: ['**/Dockerfile*', '.env*', '**/*.sh'],
+      },
       watch: {
-        ignored: [
-          '**/Dockerfile*',
-          '**/docker-compose*.yml',
-          '**/.git/**',
-          '**/*.md',
-          '**/*.txt',
-          '**/*.log',
-          '**/.env*',
-          '**/*.sh',
-          '**/*.py',
-          '**/*.sql',
-          '**/*.xml',
-          '**/*.toml',
-          '**/*.ini',
-          '**/requirements.txt',
-          '**/.gitignore',
-          '**/.dockerignore',
-          '**/LICENSE*',
-          '**/SECURITY*',
-          '**/README*'
-        ]
+        // 忽略非前端文件以提升性能
+        ignored: ['**/.git/**', '**/node_modules/**', '**/dist/**'],
       },
       proxy: {
         '/api': {
