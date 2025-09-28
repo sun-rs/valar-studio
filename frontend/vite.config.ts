@@ -55,10 +55,50 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    optimizeDeps: {
+      exclude: [
+        'Dockerfile',
+        '*.md',
+        '*.yml',
+        '*.yaml',
+        '*.txt',
+        '*.log',
+        '*.env',
+        '*.sh',
+        '*.py',
+        '*.sql',
+        '*.xml',
+        '*.toml',
+        '*.ini'
+      ]
+    },
     server: {
       port,
       host,
       allowedHosts,
+      watch: {
+        ignored: [
+          '**/Dockerfile*',
+          '**/docker-compose*.yml',
+          '**/.git/**',
+          '**/*.md',
+          '**/*.txt',
+          '**/*.log',
+          '**/.env*',
+          '**/*.sh',
+          '**/*.py',
+          '**/*.sql',
+          '**/*.xml',
+          '**/*.toml',
+          '**/*.ini',
+          '**/requirements.txt',
+          '**/.gitignore',
+          '**/.dockerignore',
+          '**/LICENSE*',
+          '**/SECURITY*',
+          '**/README*'
+        ]
+      },
       proxy: {
         '/api': {
           target: apiTarget,
