@@ -32,6 +32,8 @@
   border-radius: var(--radius-lg);
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(236, 242, 255, 0.92) 100%);
   border: 1px solid rgba(191, 219, 254, 0.7);
+  container-type: inline-size;
+  container-name: summary-card;
 }
 
 .summary-cards .ant-card::after {
@@ -69,7 +71,7 @@
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
   font-family: 'IBM Plex Sans', 'Inter', 'Roboto', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: clamp(26px, 3vw, 40px);
+  font-size: clamp(26px, 2.8vw, 40px);
   line-height: 1.1;
 }
 
@@ -109,6 +111,30 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   font-family: 'IBM Plex Sans', 'Inter', 'Roboto', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+@media (max-width: 1200px) {
+  .summary-cards .ant-statistic-content {
+    font-size: clamp(26px, 3.6vw, 42px);
+  }
+}
+
+@media (max-width: 900px) {
+  .summary-cards .ant-statistic-content {
+    font-size: clamp(26px, 4.6vw, 44px);
+  }
+}
+
+@media (max-width: 600px) {
+  .summary-cards .ant-statistic-content {
+    font-size: clamp(24px, 5.5vw, 38px);
+  }
+}
+
+@container summary-card (max-width: 280px) {
+  .ant-statistic-content {
+    font-size: clamp(24px, 5.6vw, 34px);
+  }
 }
 
 .accounts-table {
