@@ -1,13 +1,22 @@
 """Database configuration and session management."""
+from pathlib import Path
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import settings
 
 
+# Ensure database path is absolute when using relative sqlite URLs
+db_url = settings.DATABASE_URL
+if db_url.startswith("sqlite:///./"):
+    relative_path = db_url[len("sqlite:///./"):]
+    db_path = (settings.BASE_DIR / Path(relative_path)).resolve()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    db_url = f"sqlite:///{db_path}"
+
 # Create SQLite engine
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     connect_args={"check_same_thread": False},
     echo=settings.DEBUG
 )

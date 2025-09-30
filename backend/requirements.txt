@@ -1,43 +1,43 @@
 # Core
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
 
 # Database
-sqlalchemy==2.0.23
+sqlalchemy>=2.0.0
 
 # Authentication
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-bcrypt==4.0.1
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.0,<5.0.0  # bcrypt 5.0+ has breaking changes with passlib
 
 # Validation
-pydantic==2.5.2
-pydantic-settings==2.1.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
 
 # CORS
-python-dotenv==1.0.0
+python-dotenv>=1.0.0
 
 # WebSocket
-websockets==12.0
-python-socketio==5.10.0
+websockets>=12.0
+python-socketio>=5.10.0
 
 # MongoDB
-pymongo==4.6.0
+pymongo>=4.6.0
 
-# Data processing
-pandas==2.1.4
-numpy==1.26.2
+# Data processing - use latest compatible versions
+pandas>=2.1.0
+numpy>=1.26.0
 
 # Date handling
-python-dateutil==2.8.2
+python-dateutil>=2.8.0
 
 # Async
-aiofiles==23.2.1
+aiofiles>=23.2.0
 
 # Redis (optional for caching)
-redis==5.0.1
+redis>=5.0.0
 
 # Encryption
-cryptography==41.0.7
+cryptography>=41.0.0
 pyopenssl>=23.2.0

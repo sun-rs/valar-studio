@@ -186,8 +186,8 @@ const MainLayout: React.FC = () => {
           collapsible
           collapsed={collapsed}
           theme="light"
-          width={240}
-          collapsedWidth={80}
+          width={200}
+          collapsedWidth={72}
           className="desktop-sider"
         >
           {siderContent}
@@ -198,7 +198,7 @@ const MainLayout: React.FC = () => {
           open={drawerVisible}
           onClose={() => setDrawerVisible(false)}
           closable={false}
-          width={240}
+          width={200}
           bodyStyle={{ padding: 0, background: 'transparent' }}
           className="mobile-drawer"
         >
@@ -217,7 +217,7 @@ const MainLayout: React.FC = () => {
             )}
             <div className="header-title">
               <span className="title-main">{pageTitle}</span>
-            <span className="title-sub">Valar Studio Module</span>
+            <span className="title-sub">Module Selected</span>
             </div>
           </div>
           <div className="header-right">

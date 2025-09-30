@@ -8,6 +8,7 @@ set -e  # Exit on error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -132,6 +133,36 @@ else
     exit 1
 fi
 
+ensure_base_tools() {
+    local missing_tools=()
+
+    if ! command_exists curl; then
+        missing_tools+=("curl")
+    fi
+
+    if [ ${#missing_tools[@]} -gt 0 ]; then
+        print_error "缺少必要工具: ${missing_tools[*]}"
+        if [ "$OS_TYPE" = "macos" ]; then
+            print_info "macOS: 请先安装 Xcode Command Line Tools (xcode-select --install) 或使用 Homebrew 安装缺失工具"
+        else
+            print_info "Debian/Ubuntu: sudo apt update && sudo apt install -y ${missing_tools[*]}"
+            print_info "CentOS/RHEL: sudo yum install -y ${missing_tools[*]}"
+        fi
+        exit 1
+    fi
+
+    if ! command_exists lsof && ! command_exists fuser && ! command_exists ss && ! command_exists netstat; then
+        print_error "未检测到可用于释放端口的工具 (lsof / fuser / ss / netstat)"
+        if [ "$OS_TYPE" = "macos" ]; then
+            print_info "macOS: lsof 为系统自带工具，如缺失请重新安装 Command Line Tools"
+        else
+            print_info "Debian/Ubuntu: sudo apt install -y lsof"
+            print_info "CentOS/RHEL: sudo yum install -y lsof"
+        fi
+        exit 1
+    fi
+}
+
 # Function to find Python with valar installed
 find_python_with_valar() {
     print_info "查找安装了 valar 库的 Python..."
@@ -191,6 +222,12 @@ find_python_with_valar() {
     if [ -z "$PYTHON_EXEC" ]; then
         if [ -z "$candidate_python" ]; then
             print_error "未找到可用的 Python3 解释器，请先安装 Python3"
+            if [ "$OS_TYPE" = "macos" ]; then
+                print_info "macOS: 建议使用 Homebrew 安装: brew install python@3"
+            else
+                print_info "Debian/Ubuntu: sudo apt update && sudo apt install -y python3 python3-pip"
+                print_info "CentOS/RHEL: sudo yum install -y python3 python3-pip"
+            fi
             exit 1
         fi
 
@@ -229,8 +266,17 @@ find_pip() {
     elif command -v pip &>/dev/null; then
         PIP_EXEC="pip"
         print_status "使用系统 pip"
-    else
-        print_error "未找到 pip，将跳过依赖安装"
+    fi
+
+    if [ -z "$PIP_EXEC" ]; then
+        print_error "未找到 pip，无法自动安装后端依赖"
+        if [ "$OS_TYPE" = "macos" ]; then
+            print_info "macOS: 可执行 python3 -m ensurepip --upgrade 或 brew install python@3"
+        else
+            print_info "Debian/Ubuntu: sudo apt update && sudo apt install -y python3-pip"
+            print_info "CentOS/RHEL: sudo yum install -y python3-pip"
+        fi
+        exit 1
     fi
 }
 
@@ -240,23 +286,25 @@ ensure_valar_installed() {
     fi
 
     if [ -z "$PIP_EXEC" ]; then
-        print_error "未找到 pip，无法自动安装 valar 库。请手动安装 pip 或在当前 Python 环境中安装 valar 后重试。"
+        print_error "未检测到可用的 pip，无法安装 valar 库"
         exit 1
     fi
 
-    print_info "正在为 $PYTHON_EXEC 安装 valar 库 (首次执行可能需要一些时间)..."
+    print_info "检测到当前 Python 环境缺少 valar 库，正在尝试安装..."
 
     if $PIP_EXEC install -q valar; then
         if "$PYTHON_EXEC" -c "import valar" 2>/dev/null; then
             VALAR_READY=1
             print_status "valar 库安装成功"
         else
-            print_error "valar 库安装后仍无法导入，请手动检查 Python 环境"
-            echo "可以尝试运行: $PIP_EXEC install valar"
+            print_error "安装 valar 后仍无法导入，请手动检查 Python 环境"
+            echo "可以手动执行: $PIP_EXEC install valar"
             exit 1
         fi
     else
-        print_error "自动安装 valar 库失败，请手动执行: $PIP_EXEC install valar"
+        print_error "自动安装 valar 库失败"
+        echo ""
+        print_info "请手动执行以下命令后重试: $PIP_EXEC install valar"
         exit 1
     fi
 }
@@ -323,6 +371,13 @@ check_node_version() {
 
     if ! command_exists node; then
         print_error "Node.js 未安装，请先安装 Node.js ${required_major}+"
+        if [ "$OS_TYPE" = "macos" ]; then
+            print_info "macOS: 建议使用 Homebrew 安装: brew install node@${required_major}"
+            print_info "或使用 nvm 安装: nvm install ${required_major} && nvm use ${required_major}"
+        else
+            print_info "Debian/Ubuntu: curl -fsSL https://deb.nodesource.com/setup_${required_major}.x | sudo -E bash - && sudo apt install -y nodejs"
+            print_info "CentOS/RHEL: curl -fsSL https://rpm.nodesource.com/setup_${required_major}.x | sudo bash - && sudo yum install -y nodejs"
+        fi
         exit 1
     fi
 
@@ -340,7 +395,12 @@ check_node_version() {
 
     if [ "$major" -lt "$required_major" ] || { [ "$major" -eq "$required_major" ] && [ "$minor" -lt "$required_minor" ]; }; then
         print_error "检测到 Node.js 版本 $raw_version，至少需要 ${required_major}.x。"
-        print_info "请升级 Node.js，可参考 Nodesource (curl -fsSL https://deb.nodesource.com/setup_${required_major}.x | sudo -E bash -; sudo apt install -y nodejs) 或使用 nvm。"
+        if [ "$OS_TYPE" = "macos" ]; then
+            print_info "macOS: brew install node@${required_major} 或使用 nvm install ${required_major}"
+        else
+            print_info "Debian/Ubuntu: curl -fsSL https://deb.nodesource.com/setup_${required_major}.x | sudo -E bash - && sudo apt install -y nodejs"
+            print_info "CentOS/RHEL: curl -fsSL https://rpm.nodesource.com/setup_${required_major}.x | sudo bash - && sudo yum install -y nodejs"
+        fi
         exit 1
     fi
 
@@ -351,12 +411,20 @@ check_node_version() {
         print_status "npm $NPM_VERSION 已安装"
     else
         print_error "未检测到 npm，请确认 Node.js 安装完整或手动安装 npm"
+        if [ "$OS_TYPE" = "macos" ]; then
+            print_info "macOS: 可执行 brew reinstall node@${required_major} 或使用 nvm 重新安装"
+        else
+            print_info "Debian/Ubuntu: sudo apt install -y npm 或重新安装 Node.js 包"
+            print_info "CentOS/RHEL: sudo yum install -y npm"
+        fi
         exit 1
     fi
 }
 
 check_dependencies() {
     print_info "检查系统依赖..."
+
+    ensure_base_tools
 
     # Find Python with valar
     find_python_with_valar
@@ -382,17 +450,27 @@ setup_backend() {
 
         # Check if key packages are installed
         MISSING_PACKAGES=""
-        for package in fastapi uvicorn sqlalchemy pydantic pymongo cryptography pyopenssl; do
+        MISSING_COUNT=0
+        for package in fastapi sqlalchemy pydantic pymongo cryptography; do
             if ! $PYTHON_EXEC -c "import $package" 2>/dev/null; then
                 MISSING_PACKAGES="$MISSING_PACKAGES $package"
+                MISSING_COUNT=$((MISSING_COUNT + 1))
             fi
         done
 
-        if [ -n "$MISSING_PACKAGES" ]; then
-            print_info "安装缺失的后端依赖包..."
-            $PIP_EXEC install -q -r requirements.txt 2>/dev/null || {
-                print_error "部分依赖安装失败，尝试继续..."
-            }
+        # Special check for uvicorn (module name differs from package name)
+        if ! $PYTHON_EXEC -c "import uvicorn" 2>/dev/null; then
+            MISSING_PACKAGES="$MISSING_PACKAGES uvicorn"
+            MISSING_COUNT=$((MISSING_COUNT + 1))
+        fi
+
+        if [ $MISSING_COUNT -gt 0 ]; then
+            print_info "安装缺失的后端依赖包: $MISSING_PACKAGES"
+            if $PIP_EXEC install -r requirements.txt; then
+                print_status "后端依赖安装完成"
+            else
+                print_error "依赖安装失败，但尝试继续启动..."
+            fi
         else
             print_status "后端依赖已满足"
         fi
@@ -441,21 +519,26 @@ start_backend() {
 
     cd ..
 
-    # Wait for backend to start
+    # Wait for backend to start (reduce timeout to 30s)
     print_info "等待后端服务启动..."
-    for i in {1..60}; do
+    local max_wait=30
+    local check_interval=1
+
+    for i in $(seq 1 $max_wait); do
         # Check if process is still running
         if ! ps -p $BACKEND_PID > /dev/null 2>&1; then
             echo ""
-            print_error "后端进程已退出，请查看 backend.log"
-            tail -20 backend.log
+            print_error "后端进程已退出，请查看 backend.log:"
+            echo "----------------------------------------"
+            tail -30 backend.log
+            echo "----------------------------------------"
             return 1
         fi
 
-        # Try multiple endpoints
-        if curl -s http://localhost:8000/ > /dev/null 2>&1 || \
-           curl -s http://localhost:8000/health > /dev/null 2>&1 || \
-           curl -s http://localhost:8000/docs > /dev/null 2>&1; then
+        # Try multiple endpoints (macOS compatible - no timeout command)
+        if curl -sf --connect-timeout 2 --max-time 3 http://localhost:8000/ > /dev/null 2>&1 || \
+           curl -sf --connect-timeout 2 --max-time 3 http://localhost:8000/health > /dev/null 2>&1 || \
+           curl -sf --connect-timeout 2 --max-time 3 http://localhost:8000/docs > /dev/null 2>&1; then
             echo ""
             print_status "后端服务已启动 (PID: $BACKEND_PID)"
             print_status "API地址: http://localhost:8000"
@@ -463,21 +546,27 @@ start_backend() {
             return 0
         fi
 
-        # Show progress
-        if [ $((i % 5)) -eq 0 ]; then
+        # Show progress every 2 seconds
+        if [ $((i % 2)) -eq 0 ]; then
             printf " ${i}s"
         else
             printf "."
         fi
-        sleep 1
+        sleep $check_interval
     done
 
     echo ""
-    print_error "后端服务启动超时，但进程仍在运行"
-    print_info "进程 PID: $BACKEND_PID"
-    print_info "请手动检查: curl http://localhost:8000/docs"
-    print_info "查看日志: tail -f backend.log"
-    return 0  # Continue anyway since process is running
+    print_error "后端服务启动超时 (${max_wait}秒)"
+    print_info "进程 PID: $BACKEND_PID (仍在运行)"
+    print_info "可能原因: 依赖缺失、端口被占用、配置错误"
+    print_info "查看完整日志: tail -f backend.log"
+    print_info "手动测试: curl -v http://localhost:8000/docs"
+    echo ""
+    print_info "最近日志内容:"
+    echo "----------------------------------------"
+    tail -20 backend.log
+    echo "----------------------------------------"
+    return 1
 }
 
 # Start frontend

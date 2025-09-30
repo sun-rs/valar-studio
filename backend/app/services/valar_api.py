@@ -39,7 +39,10 @@ def get_accounts(accounts: Dict[str, int | float]) -> pd.DataFrame:
 
     # Handle accounts with no positions
     if len(pos) > 0:
-        float_pnl = pos.groupby("accountid").apply(lambda x:int(x.float_pnl.sum())).to_dict()
+        # Use groupby().sum() instead of apply() to avoid FutureWarning
+        float_pnl = pos.groupby("accountid", as_index=False)["float_pnl"].sum()
+        float_pnl["float_pnl"] = float_pnl["float_pnl"].astype(int)
+        float_pnl = dict(zip(float_pnl["accountid"], float_pnl["float_pnl"]))
     else:
         float_pnl = {}
 
