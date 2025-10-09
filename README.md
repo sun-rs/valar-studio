@@ -56,6 +56,11 @@ chmod +x start.sh stop.sh
 
 当前仓库暂未提供 Windows 批处理脚本。建议使用 WSL 执行上述命令，或参考“方式三：手动启动”分别运行前后端服务。
 
+> 📘 **更多文档**：
+> - `docs/SYSTEM_OVERVIEW.md`：完整的架构说明、运维建议与 Roadmap。
+> - `docs/SECURITY.md`：最新的安全配置清单与部署核对表。
+> - `CLAUDE.md`：项目高层蓝图摘要。
+
 ### 方式二：Docker 启动
 
 ```bash
@@ -103,6 +108,8 @@ npm run dev
 
 - 用户名: `admin`
 - 密码: `admin123456`
+
+> ⚠️ 建议按照 `docs/SECURITY.md` 的清单立即修改默认管理员密码及其他敏感配置。
 
 ## 系统要求
 
@@ -193,7 +200,8 @@ valar-studio/
 ├── start.sh              # macOS/Linux 启动脚本
 ├── stop.sh               # macOS/Linux 停止脚本
 ├── docker-compose.yml    # Docker 配置
-└── README.md            # 项目说明
+├── docs/                # 系统、部署与安全文档
+└── README.md            # 项目说明（当前文件）
 
 ```
 

@@ -6,7 +6,6 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 .vscode
-CLAUDE.md
 PROJECT_STATUS.md
 node_modules/
 
