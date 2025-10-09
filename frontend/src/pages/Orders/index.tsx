@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Card, Table, Tabs, DatePicker, Button, Space, Tag, Row, Col, Progress, Switch, Tooltip } from 'antd';
-import { CalendarOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { Card, Table, Tabs, DatePicker, Button, Space, Tag, Row, Col, Progress, Tooltip, Radio } from 'antd';
+import { CalendarOutlined, PlusOutlined, MinusOutlined, UnorderedListOutlined, WarningOutlined } from '@ant-design/icons';
 import { ordersService, Order, Trade } from '../../services/orders';
 import { accountConfigApi } from '../../services/accountConfig';
 import { useRefreshStore } from '../../stores/refreshStore';
@@ -71,10 +71,8 @@ const Orders: React.FC = () => {
   };
 
   useEffect(() => {
-    // Set current page and refresh function
     setCurrentPage('/orders');
-    setOrdersRefresh(fetchData);
-  }, []);
+  }, [setCurrentPage]);
 
   useEffect(() => {
     if (!user) {
@@ -93,11 +91,7 @@ const Orders: React.FC = () => {
   }, [user]);
 
   // Update refresh function when dependencies change
-  useEffect(() => {
-    setOrdersRefresh(fetchData);
-  }, [selectedAccounts, selectedDate]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (selectedAccounts.length === 0) {
       setOrders([]);
       setTrades([]);
@@ -123,11 +117,15 @@ const Orders: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedAccounts, selectedDate, isSpecialFilter]);
+
+  useEffect(() => {
+    setOrdersRefresh(fetchData);
+  }, [fetchData, setOrdersRefresh]);
 
   useEffect(() => {
     fetchData();
-  }, [selectedAccounts, selectedDate, isSpecialFilter]);
+  }, [fetchData]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -444,22 +442,38 @@ const Orders: React.FC = () => {
       <div className="orders-toolbar">
         <span className="toolbar-label">筛选条件</span>
         <Space size={12} wrap className="orders-actions">
-          <Switch
-            checked={isSpecialFilter}
-            onChange={setIsSpecialFilter}
-            checkedChildren="特殊"
-            unCheckedChildren="全部"
-            size="small"
-          />
+          <div className="orders-filter-toggle">
+            <Radio.Group
+              value={isSpecialFilter ? 'special' : 'all'}
+              onChange={(e) => setIsSpecialFilter(e.target.value === 'special')}
+              optionType="button"
+              buttonStyle="solid"
+            >
+              <Radio.Button value="all">
+                <span className="orders-filter-option">
+                  <UnorderedListOutlined />
+                  全部订单
+                </span>
+              </Radio.Button>
+              <Radio.Button value="special">
+                <span className="orders-filter-option">
+                  <WarningOutlined />
+                  特殊订单
+                </span>
+              </Radio.Button>
+            </Radio.Group>
+          </div>
           <DatePicker
             value={selectedDate}
             onChange={(date) => date && setSelectedDate(date)}
             format="YYYY-MM-DD"
             allowClear={false}
+            className="orders-date-picker"
           />
           <Button
             onClick={() => setSelectedDate(dayjs())}
             icon={<CalendarOutlined />}
+            className="orders-today-button"
           >
             今日
           </Button>

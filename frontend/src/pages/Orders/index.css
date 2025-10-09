@@ -27,8 +27,90 @@
   color: var(--color-text-secondary);
 }
 
-.orders-toolbar .orders-actions {
-  gap: 14px !important;
+
+.orders-filter-toggle {
+  display: inline-flex;
+}
+
+.orders-filter-toggle .ant-radio-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 4px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.22);
+  height: 36px;
+}
+
+.orders-filter-toggle .ant-radio-button-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  line-height: 28px;
+  padding: 0 16px;
+  border-radius: 999px !important;
+  border: none;
+  background: transparent;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.orders-filter-toggle .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked):hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-text-primary, #0f172a);
+}
+
+.orders-filter-toggle .ant-radio-button-wrapper-checked {
+  background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+}
+
+.orders-filter-toggle .ant-radio-button-wrapper::before {
+  display: none;
+}
+
+.orders-filter-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.orders-filter-option .anticon {
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+}
+
+.orders-filter-toggle .ant-radio-button-wrapper-checked .orders-filter-option .anticon {
+  color: #fff;
+}
+
+.orders-date-picker,
+.orders-date-picker .ant-picker-input > input {
+  height: 36px;
+  line-height: 36px;
+}
+
+.orders-date-picker .ant-picker-input {
+  height: 36px;
+}
+
+.orders-date-picker .ant-picker-suffix {
+  line-height: 36px;
+}
+
+.orders-today-button {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+}
+
+.orders-toolbar .orders-actions .ant-btn-icon {
+  margin-bottom: 0;
 }
 
 .orders-toolbar .ant-select,
@@ -142,6 +224,28 @@
   .orders-toolbar .ant-select,
   .orders-toolbar .ant-picker {
     width: 100% !important;
+  }
+
+  .orders-filter-toggle {
+    width: 100%;
+  }
+
+  .orders-filter-toggle .ant-radio-group {
+    height: 40px;
+    padding: 6px;
+  }
+
+  .orders-filter-toggle .ant-radio-button-wrapper {
+    height: 28px;
+    line-height: 28px;
+    padding: 0 18px;
+  }
+
+  .orders-date-picker,
+  .orders-date-picker .ant-picker-input > input,
+  .orders-today-button {
+    height: 40px;
+    line-height: 40px;
   }
 
   .ant-table {
