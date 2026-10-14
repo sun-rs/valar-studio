@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Space, Spin, Select, Tooltip, Checkbox } from 'antd';
+import { Card, Row, Col, Statistic, Table, Space, Spin, Select, Tooltip, Checkbox, Tag } from 'antd';
 import {
   DollarOutlined,
   RiseOutlined,
@@ -309,6 +309,10 @@ const Dashboard: React.FC = () => {
       .reduce((sum, acc) => sum + (acc.float_pnl || 0), 0);
   }, [accounts, includedIds]);
 
+  // 无数据占位行的通用渲染
+  const noData = (record: AccountSummary) => record.has_data === false;
+  const NA_CELL = <span className="numeric-cell" style={{ color: '#a3a3a3' }}>-</span>;
+
   const columns = [
     {
       title: '汇总',
@@ -335,21 +339,32 @@ const Dashboard: React.FC = () => {
       dataIndex: 'account_name',
       key: 'account_name',
       ellipsis: true,
-      render: (text: string) => text || '-',
+      render: (text: string, record: AccountSummary) => (
+        <Space size={4}>
+          <span>{text || '-'}</span>
+          {noData(record) && (
+            <Tooltip title="该账户已分配，但数据源（MongoDB）中暂无数据，接入后自动显示">
+              <Tag color="default" style={{ marginInlineEnd: 0 }}>暂无数据</Tag>
+            </Tooltip>
+          )}
+        </Space>
+      ),
     },
     {
       title: '余额',
       dataIndex: 'balance',
       key: 'balance',
       align: 'right' as const,
-      render: formatCurrency,
+      render: (value: number, record: AccountSummary) =>
+        noData(record) ? NA_CELL : formatCurrency(value),
     },
     {
       title: '浮动盈亏',
       dataIndex: 'float_pnl',
       key: 'float_pnl',
       align: 'right' as const,
-      render: (value: number) => {
+      render: (value: number, record: AccountSummary) => {
+        if (noData(record)) return NA_CELL;
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) {
           return '-';
@@ -365,7 +380,8 @@ const Dashboard: React.FC = () => {
       dataIndex: 'total_pnl',
       key: 'total_pnl',
       align: 'right' as const,
-      render: (value: number) => {
+      render: (value: number, record: AccountSummary) => {
+        if (noData(record)) return NA_CELL;
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) {
           return '-';
@@ -381,7 +397,8 @@ const Dashboard: React.FC = () => {
       dataIndex: 'profit_rate',
       key: 'profit_rate',
       align: 'right' as const,
-      render: (value: number | string) => {
+      render: (value: number | string, record: AccountSummary) => {
+        if (noData(record)) return NA_CELL;
         const content = formatPercent(value);
         if (content === '-') {
           return <span className="numeric-cell">-</span>;
@@ -400,7 +417,8 @@ const Dashboard: React.FC = () => {
       dataIndex: 'margin',
       key: 'margin',
       align: 'right' as const,
-      render: (value: number) => {
+      render: (value: number, record: AccountSummary) => {
+        if (noData(record)) return NA_CELL;
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) {
           return '-';
@@ -415,7 +433,8 @@ const Dashboard: React.FC = () => {
       dataIndex: 'margin_rate',
       key: 'margin_rate',
       align: 'right' as const,
-      render: (value: number | string) => {
+      render: (value: number | string, record: AccountSummary) => {
+        if (noData(record)) return NA_CELL;
         const content = formatPercent(value);
         return <span className="numeric-cell">{content}</span>;
       },
@@ -425,7 +444,8 @@ const Dashboard: React.FC = () => {
       dataIndex: 'available',
       key: 'available',
       align: 'right' as const,
-      render: (value: number) => {
+      render: (value: number, record: AccountSummary) => {
+        if (noData(record)) return NA_CELL;
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) {
           return '-';
@@ -443,6 +463,7 @@ const Dashboard: React.FC = () => {
       key: 'initial_capital',
       align: 'right' as const,
       render: (value: number) => {
+        // 初始资金来自账户配置，无数据账户也照常显示
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) {
           return '-';
@@ -459,7 +480,8 @@ const Dashboard: React.FC = () => {
       dataIndex: 'update_time',
       key: 'update_time',
       width: 180,
-      render: (text: string) => dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
+      render: (text: string, record: AccountSummary) =>
+        noData(record) || !text ? <span style={{ color: '#a3a3a3' }}>-</span> : dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
     },
   ];
 
@@ -730,7 +752,9 @@ const Dashboard: React.FC = () => {
               size="small"
               className="dense-table"
               components={{ body: { row: DraggableRow } }}
-              rowClassName={(record) => useRowChangeClasses(record.balance)}
+              rowClassName={(record) =>
+                record.has_data === false ? 'row-no-data' : useRowChangeClasses(record.balance)
+              }
             />
           </SortableContext>
         </DndContext>

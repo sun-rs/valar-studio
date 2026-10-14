@@ -40,6 +40,7 @@ class AccountSummary(BaseModel):
     frozen: float
     profit_rate: float
     update_time: str
+    has_data: bool = True  # False 表示该账户在数据源（MongoDB）中暂无数据，前端展示占位行
 
 
 class AccountHistoryPoint(BaseModel):
@@ -222,6 +223,26 @@ async def get_accounts_detail(
     # Add account names
     for summary in summaries:
         summary["account_name"] = account_names.get(summary["account_id"])
+
+    # 为在数据源中查不到数据的账户补占位行，避免界面上"凭空消失"造成困惑
+    returned_ids = {s["account_id"] for s in summaries}
+    for account_id in accounts:
+        if account_id not in returned_ids:
+            summaries.append({
+                "account_id": account_id,
+                "account_name": account_names.get(account_id),
+                "balance": 0.0,
+                "float_pnl": 0.0,
+                "total_pnl": 0.0,
+                "margin": 0.0,
+                "margin_rate": "-",
+                "available": 0.0,
+                "initial_capital": initial_capitals.get(account_id, 0.0),
+                "frozen": 0.0,
+                "profit_rate": 0.0,
+                "update_time": "",
+                "has_data": False,
+            })
 
     return [AccountSummary(**s) for s in summaries]
 

@@ -23,6 +23,7 @@ export interface AccountSummary {
   frozen: number;
   profit_rate: number;
   update_time: string;
+  has_data?: boolean; // false 表示数据源（MongoDB）中暂无该账户数据
 }
 
 export interface AccountHistoryPoint {

@@ -163,6 +163,16 @@
   max-width: 1400px;
 }
 
+/* 无数据账户的占位行：灰色弱化显示 */
+.row-no-data td {
+  color: #a3a3a3 !important;
+  background: #fafafa !important;
+}
+
+.row-no-data .numeric-cell {
+  color: #a3a3a3 !important;
+}
+
 .history-card .ant-card-head {
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
