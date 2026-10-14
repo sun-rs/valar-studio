@@ -56,9 +56,14 @@ class AccountHistoryData(BaseModel):
 
 
 class DashboardAccountPreference(BaseModel):
-    """Single account preference entry (ordered)."""
+    """Single account preference entry (ordered).
+
+    visible: 是否在仪表盘显示（在「我的交易账户」中设置）
+    included: 是否参与顶部卡片汇总（在仪表盘账户明细中勾选，仅对可见账户有意义）
+    """
     account_id: str
     included: bool = True
+    visible: bool = True
 
 
 class DashboardPreferences(BaseModel):
@@ -73,7 +78,7 @@ def _merge_preferences(stored: List[dict], permitted: List[str]) -> List[Dashboa
     """Merge stored preferences with current permissions.
 
     - 只保留当前有权限的账户，维持用户保存的顺序；
-    - 新获得权限的账户追加在末尾，默认勾选。
+    - 新获得权限的账户追加在末尾，默认可见且勾选。
     """
     permitted_set = set(permitted)
     merged: List[DashboardAccountPreference] = []
@@ -84,13 +89,14 @@ def _merge_preferences(stored: List[dict], permitted: List[str]) -> List[Dashboa
         if account_id in permitted_set and account_id not in seen:
             merged.append(DashboardAccountPreference(
                 account_id=account_id,
-                included=bool(entry.get("included", True))
+                included=bool(entry.get("included", True)),
+                visible=bool(entry.get("visible", True))
             ))
             seen.add(account_id)
 
     for account_id in permitted:
         if account_id not in seen:
-            merged.append(DashboardAccountPreference(account_id=account_id, included=True))
+            merged.append(DashboardAccountPreference(account_id=account_id, included=True, visible=True))
             seen.add(account_id)
 
     return merged
@@ -119,7 +125,7 @@ async def save_dashboard_preferences(
     # 只接受当前有权限的账户，避免越权写入
     permitted_set = set(user_permissions)
     cleaned = [
-        {"account_id": p.account_id, "included": p.included}
+        {"account_id": p.account_id, "included": p.included, "visible": p.visible}
         for p in preferences.accounts
         if p.account_id in permitted_set
     ]
@@ -197,6 +203,13 @@ async def get_accounts_detail(
     else:
         # Filter specified accounts by user permissions
         accounts = [acc for acc in accounts if acc in user_permissions]
+
+    # 按用户偏好过滤：在「我的交易账户」中被设置为隐藏的账户不出现在仪表盘
+    stored_prefs = (current_user.settings or {}).get(DASHBOARD_PREF_KEY, [])
+    visible_ids = {
+        p.account_id for p in _merge_preferences(stored_prefs, user_permissions) if p.visible
+    }
+    accounts = [acc for acc in accounts if acc in visible_ids]
 
     if not accounts:
         return []

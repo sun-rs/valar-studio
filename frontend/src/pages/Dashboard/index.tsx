@@ -22,7 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import ReactECharts from 'echarts-for-react';
-import { dashboardService, DashboardSummary, AccountSummary, AccountHistoryData } from '../../services/dashboard';
+import { dashboardService, DashboardSummary, AccountSummary, AccountHistoryData, DashboardAccountPreference } from '../../services/dashboard';
 import { useRefreshStore } from '../../stores/refreshStore';
 import { useStatCardClasses, useRowChangeClasses } from '../../hooks/useValueChange';
 import dayjs from 'dayjs';
@@ -74,6 +74,8 @@ const Dashboard: React.FC = () => {
   // 用 ref 镜像最新状态，供刷新闭包与事件回调读取，避免闭包陈旧
   const accountsRef = useRef<AccountSummary[]>([]);
   const includedRef = useRef<Set<string>>(new Set());
+  // 完整的偏好列表（含被隐藏的账户），保存时必须带上它们，否则隐藏状态会被重置
+  const prefsRef = useRef<DashboardAccountPreference[]>([]);
   accountsRef.current = accounts;
   includedRef.current = includedIds;
 
@@ -104,12 +106,20 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // 持久化偏好（勾选状态 + 行顺序），服务端按用户保存
-  const persistPreferences = (orderedAccounts: AccountSummary[], included: Set<string>) => {
-    const payload = orderedAccounts.map(a => ({
-      account_id: a.account_id,
-      included: included.has(a.account_id),
-    }));
+  // 持久化偏好（勾选状态 + 行顺序），服务端按用户保存。
+  // 注意：表格里只有可见账户，被隐藏账户的偏好要原样带上，否则隐藏状态会被覆盖丢失。
+  const persistPreferences = (orderedVisibleAccounts: AccountSummary[], included: Set<string>) => {
+    const visibleOrderedIds = orderedVisibleAccounts.map(a => a.account_id);
+    const payload: DashboardAccountPreference[] = [
+      ...visibleOrderedIds.map(id => ({
+        account_id: id,
+        visible: true,
+        included: included.has(id),
+      })),
+      ...prefsRef.current
+        .filter(p => !visibleOrderedIds.includes(p.account_id))
+        .map(p => ({ account_id: p.account_id, visible: p.visible, included: p.included })),
+    ];
     dashboardService
       .savePreferences(payload)
       .catch(error => console.error('Failed to save dashboard preferences:', error));
@@ -122,6 +132,7 @@ const Dashboard: React.FC = () => {
         dashboardService.getPreferences(),
         dashboardService.getAccounts(),
       ]);
+      prefsRef.current = prefs.accounts;
 
       // 按已保存的顺序排列账户（后端已合并当前权限，新账户排在末尾）
       const rank = new Map(prefs.accounts.map((p, idx) => [p.account_id, idx]));

@@ -38,7 +38,8 @@ export interface AccountHistoryData {
 
 export interface DashboardAccountPreference {
   account_id: string;
-  included: boolean;
+  included: boolean; // 是否参与顶部卡片汇总（仪表盘勾选）
+  visible: boolean;  // 是否在仪表盘显示（「我的交易账户」中设置）
 }
 
 export interface DashboardPreferences {

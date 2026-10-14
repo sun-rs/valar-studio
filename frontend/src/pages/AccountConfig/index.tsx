@@ -17,12 +17,15 @@ import {
   Checkbox,
   Row,
   Col,
-  Spin
+  Spin,
+  Switch,
+  Tooltip
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
 import { accountConfigApi, AccountConfig as AccountConfigType, AccountPermission as AccountPermissionRecord } from '../../services/accountConfig';
 import { settingsService, User as SettingsUser } from '../../services/settings';
+import { dashboardService, DashboardAccountPreference } from '../../services/dashboard';
 import type { ColumnsType } from 'antd/es/table';
 import './index.css';
 
@@ -51,6 +54,10 @@ const AccountConfig: React.FC = () => {
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [permissionLoading, setPermissionLoading] = useState(false);
 
+  // 仪表盘显示偏好（每个用户自己的可见性设置）
+  const [dashPrefs, setDashPrefs] = useState<DashboardAccountPreference[]>([]);
+  const [prefSaving, setPrefSaving] = useState<string | null>(null);
+
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
@@ -61,12 +68,34 @@ const AccountConfig: React.FC = () => {
   const loadMyAccounts = async () => {
     setLoading(true);
     try {
-      const data = await accountConfigApi.getMyAccounts();
+      const [data, prefs] = await Promise.all([
+        accountConfigApi.getMyAccounts(),
+        dashboardService.getPreferences(),
+      ]);
       setAccounts(data);
+      setDashPrefs(prefs.accounts);
     } catch (error) {
       message.error('加载账户失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 切换某个账户是否在仪表盘显示（持久化到用户偏好，保留顺序与勾选状态）
+  const handleDashboardVisibleChange = async (accountId: string, visible: boolean) => {
+    const newPrefs = dashPrefs.some(p => p.account_id === accountId)
+      ? dashPrefs.map(p => (p.account_id === accountId ? { ...p, visible } : p))
+      : [...dashPrefs, { account_id: accountId, visible, included: true }];
+
+    setDashPrefs(newPrefs);
+    setPrefSaving(accountId);
+    try {
+      await dashboardService.savePreferences(newPrefs);
+      message.success(visible ? `账户 ${accountId} 将在仪表盘显示` : `账户 ${accountId} 已从仪表盘隐藏`);
+    } catch (error) {
+      message.error('保存显示设置失败');
+    } finally {
+      setPrefSaving(null);
     }
   };
 
@@ -300,6 +329,27 @@ const AccountConfig: React.FC = () => {
     });
   }
 
+  // 「我的交易账户」专有列：控制该账户是否在仪表盘显示（每个用户自己的偏好）
+  const dashboardVisibleColumn: ColumnsType<AccountConfigType>[number] = {
+    title: '仪表盘显示',
+    key: 'dashboard_visible',
+    width: 100,
+    align: 'center' as const,
+    render: (_, record) => {
+      const pref = dashPrefs.find(p => p.account_id === record.account_id);
+      const visible = pref ? pref.visible : true;
+      return (
+        <Tooltip title={visible ? '点击后该账户不在仪表盘显示' : '点击后该账户恢复在仪表盘显示'}>
+          <Switch
+            checked={visible}
+            loading={prefSaving === record.account_id}
+            onChange={(v) => handleDashboardVisibleChange(record.account_id, v)}
+          />
+        </Tooltip>
+      );
+    },
+  };
+
   const permissionColumns: ColumnsType<AccountPermission> = [
     {
       title: '用户',
@@ -357,7 +407,7 @@ const AccountConfig: React.FC = () => {
         <Tabs activeKey={activeTab} onChange={handleTabChange}>
           <TabPane tab="我的交易账户" key="my-accounts">
             <Table
-              columns={accountColumns.filter(col => col.key !== 'actions')}
+              columns={[...accountColumns.filter(col => col.key !== 'actions'), dashboardVisibleColumn]}
               dataSource={accounts}
               rowKey="account_id"
               loading={loading}
