@@ -1,11 +1,26 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Space, Spin, Select, Tooltip } from 'antd';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Card, Row, Col, Statistic, Table, Space, Spin, Select, Tooltip, Checkbox } from 'antd';
 import {
   DollarOutlined,
   RiseOutlined,
   BankOutlined,
   LineChartOutlined,
 } from '@ant-design/icons';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import ReactECharts from 'echarts-for-react';
 import { dashboardService, DashboardSummary, AccountSummary, AccountHistoryData } from '../../services/dashboard';
 import { useRefreshStore } from '../../stores/refreshStore';
@@ -13,30 +28,143 @@ import { useStatCardClasses, useRowChangeClasses } from '../../hooks/useValueCha
 import dayjs from 'dayjs';
 import './index.css';
 
+interface DraggableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  'data-row-key': string;
+}
+
+// 可拖拽的表格行：整行可作为拖拽手柄，垂直方向排序
+const DraggableRow: React.FC<DraggableRowProps> = (props) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props['data-row-key'] });
+
+  const style: React.CSSProperties = {
+    ...props.style,
+    transform: CSS.Translate.toString(transform),
+    transition,
+    cursor: 'grab',
+    ...(isDragging
+      ? { position: 'relative', zIndex: 10, background: '#e6f4ff', cursor: 'grabbing' }
+      : {}),
+  };
+
+  return (
+    <tr {...props} {...attributes} {...listeners} ref={setNodeRef} style={style}>
+      {props.children}
+    </tr>
+  );
+};
+
 const Dashboard: React.FC = () => {
   const { setDashboardRefresh } = useRefreshStore();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
+  const [includedIds, setIncludedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [historyData, setHistoryData] = useState<AccountHistoryData[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyDays, setHistoryDays] = useState(3);
   const [selectedAccountForHistory, setSelectedAccountForHistory] = useState<string | undefined>(undefined);
 
+  // 用 ref 镜像最新状态，供刷新闭包与事件回调读取，避免闭包陈旧
+  const accountsRef = useRef<AccountSummary[]>([]);
+  const includedRef = useRef<Set<string>>(new Set());
+  accountsRef.current = accounts;
+  includedRef.current = includedIds;
+
+  // 拖拽需要移动一定距离才激活，避免与勾选点击冲突
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  // 汇总卡片只统计勾选的账户
+  const fetchSummary = async (ids: string[]) => {
+    try {
+      if (ids.length === 0) {
+        setSummary({
+          total_balance: 0,
+          net_profit: 0,
+          total_margin: 0,
+          available_funds: 0,
+          profit_rate: 0,
+          update_time: dayjs().toISOString(),
+          accounts_count: 0,
+        });
+        return;
+      }
+      const summaryData = await dashboardService.getSummary(ids);
+      setSummary(summaryData);
+    } catch (error) {
+      console.error('Failed to fetch summary:', error);
+    }
+  };
+
+  // 持久化偏好（勾选状态 + 行顺序），服务端按用户保存
+  const persistPreferences = (orderedAccounts: AccountSummary[], included: Set<string>) => {
+    const payload = orderedAccounts.map(a => ({
+      account_id: a.account_id,
+      included: included.has(a.account_id),
+    }));
+    dashboardService
+      .savePreferences(payload)
+      .catch(error => console.error('Failed to save dashboard preferences:', error));
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [summaryData, accountsData] = await Promise.all([
-        dashboardService.getSummary(),
+      const [prefs, accountsData] = await Promise.all([
+        dashboardService.getPreferences(),
         dashboardService.getAccounts(),
       ]);
-      setSummary(summaryData);
-      setAccounts(accountsData);
+
+      // 按已保存的顺序排列账户（后端已合并当前权限，新账户排在末尾）
+      const rank = new Map(prefs.accounts.map((p, idx) => [p.account_id, idx]));
+      const sorted = [...accountsData].sort(
+        (a, b) => (rank.get(a.account_id) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.account_id) ?? Number.MAX_SAFE_INTEGER)
+      );
+      const included = new Set(
+        prefs.accounts.filter(p => p.included).map(p => p.account_id)
+      );
+
+      setAccounts(sorted);
+      setIncludedIds(included);
+      await fetchSummary(sorted.filter(a => included.has(a.account_id)).map(a => a.account_id));
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // 勾选/取消勾选某个账户是否参与顶部汇总
+  const handleIncludeToggle = (accountId: string, checked: boolean) => {
+    const newIncluded = new Set(includedRef.current);
+    if (checked) {
+      newIncluded.add(accountId);
+    } else {
+      newIncluded.delete(accountId);
+    }
+    setIncludedIds(newIncluded);
+    persistPreferences(accountsRef.current, newIncluded);
+    fetchSummary(accountsRef.current.filter(a => newIncluded.has(a.account_id)).map(a => a.account_id));
+  };
+
+  // 拖拽结束：更新行顺序并持久化
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const current = accountsRef.current;
+    const oldIndex = current.findIndex(a => a.account_id === active.id);
+    const newIndex = current.findIndex(a => a.account_id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(current, oldIndex, newIndex);
+    setAccounts(reordered);
+    persistPreferences(reordered, includedRef.current);
   };
 
   const fetchHistoryData = async () => {
@@ -174,12 +302,27 @@ const Dashboard: React.FC = () => {
     return `${numericValue.toFixed(2)}%`;
   };
 
-  // Calculate total float PnL from all accounts
+  // Calculate total float PnL from included accounts only
   const totalFloatPnl = useMemo(() => {
-    return accounts.reduce((sum, acc) => sum + (acc.float_pnl || 0), 0);
-  }, [accounts]);
+    return accounts
+      .filter(acc => includedIds.has(acc.account_id))
+      .reduce((sum, acc) => sum + (acc.float_pnl || 0), 0);
+  }, [accounts, includedIds]);
 
   const columns = [
+    {
+      title: '汇总',
+      key: 'included',
+      fixed: 'left' as const,
+      width: 52,
+      align: 'center' as const,
+      render: (_: unknown, record: AccountSummary) => (
+        <Checkbox
+          checked={includedIds.has(record.account_id)}
+          onChange={(e) => handleIncludeToggle(record.account_id, e.target.checked)}
+        />
+      ),
+    },
     {
       title: '账户ID',
       dataIndex: 'account_id',
@@ -568,17 +711,29 @@ const Dashboard: React.FC = () => {
       </Spin>
 
       <Card title="账户明细" className="accounts-table">
-        <Table
-          columns={columns}
-          dataSource={accounts}
-          rowKey="account_id"
-          loading={loading}
-          pagination={false}
-          scroll={{ x: 'max-content' }}
-          size="small"
-          className="dense-table"
-          rowClassName={(record) => useRowChangeClasses(record.balance)}
-        />
+        <DndContext
+          sensors={sensors}
+          modifiers={[restrictToVerticalAxis]}
+          onDragEnd={onDragEnd}
+        >
+          <SortableContext
+            items={accounts.map(a => a.account_id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <Table
+              columns={columns}
+              dataSource={accounts}
+              rowKey="account_id"
+              loading={loading}
+              pagination={false}
+              scroll={{ x: 'max-content' }}
+              size="small"
+              className="dense-table"
+              components={{ body: { row: DraggableRow } }}
+              rowClassName={(record) => useRowChangeClasses(record.balance)}
+            />
+          </SortableContext>
+        </DndContext>
       </Card>
 
       <Card

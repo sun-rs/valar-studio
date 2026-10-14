@@ -35,6 +35,15 @@ export interface AccountHistoryData {
   data: AccountHistoryPoint[];
 }
 
+export interface DashboardAccountPreference {
+  account_id: string;
+  included: boolean;
+}
+
+export interface DashboardPreferences {
+  accounts: DashboardAccountPreference[];
+}
+
 export const dashboardService = {
   getSummary: async (accounts?: string[]): Promise<DashboardSummary> => {
     if (accounts && accounts.length > 0) {
@@ -65,5 +74,13 @@ export const dashboardService = {
     }
 
     return await api.get(`/dashboard/history?${searchParams.toString()}`);
+  },
+
+  getPreferences: async (): Promise<DashboardPreferences> => {
+    return await api.get('/dashboard/preferences');
+  },
+
+  savePreferences: async (accounts: DashboardAccountPreference[]): Promise<DashboardPreferences> => {
+    return await api.put('/dashboard/preferences', { accounts });
   },
 };

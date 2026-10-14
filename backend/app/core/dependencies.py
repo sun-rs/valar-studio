@@ -70,20 +70,11 @@ async def get_current_admin(
 
 
 def get_user_permissions(user: User, db: Session) -> List[str]:
-    """Get list of account IDs that user has permission to access."""
-    user_role = user.role
-    if isinstance(user_role, str):
-        try:
-            user_role = UserRole(user_role)
-        except ValueError:
-            user_role = None
+    """Get list of account IDs that user has permission to access.
 
-    if user_role == UserRole.ADMIN:
-        # Admin has access to all accounts in account_config
-        from ..models.account import AccountConfig
-        all_accounts = db.query(AccountConfig.account_id).all()
-        return [account.account_id for account in all_accounts]
-
+    所有用户（包括管理员）都只返回被显式分配的账户，
+    与「账户配置-我的交易账户」的口径保持一致。
+    """
     permissions = db.query(AccountPermission).filter(
         AccountPermission.user_id == user.id
     ).all()

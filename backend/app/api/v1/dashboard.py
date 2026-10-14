@@ -54,6 +54,83 @@ class AccountHistoryData(BaseModel):
     data: List[AccountHistoryPoint]
 
 
+class DashboardAccountPreference(BaseModel):
+    """Single account preference entry (ordered)."""
+    account_id: str
+    included: bool = True
+
+
+class DashboardPreferences(BaseModel):
+    """Dashboard preferences: ordered accounts with inclusion flags."""
+    accounts: List[DashboardAccountPreference] = []
+
+
+DASHBOARD_PREF_KEY = "dashboard_accounts"
+
+
+def _merge_preferences(stored: List[dict], permitted: List[str]) -> List[DashboardAccountPreference]:
+    """Merge stored preferences with current permissions.
+
+    - 只保留当前有权限的账户，维持用户保存的顺序；
+    - 新获得权限的账户追加在末尾，默认勾选。
+    """
+    permitted_set = set(permitted)
+    merged: List[DashboardAccountPreference] = []
+    seen = set()
+
+    for entry in stored:
+        account_id = entry.get("account_id")
+        if account_id in permitted_set and account_id not in seen:
+            merged.append(DashboardAccountPreference(
+                account_id=account_id,
+                included=bool(entry.get("included", True))
+            ))
+            seen.add(account_id)
+
+    for account_id in permitted:
+        if account_id not in seen:
+            merged.append(DashboardAccountPreference(account_id=account_id, included=True))
+            seen.add(account_id)
+
+    return merged
+
+
+@router.get("/preferences", response_model=DashboardPreferences)
+async def get_dashboard_preferences(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """获取当前用户的仪表盘账户偏好（勾选状态与排序，持久化在用户设置中）。"""
+    user_permissions = get_user_permissions(current_user, db)
+    stored = (current_user.settings or {}).get(DASHBOARD_PREF_KEY, [])
+    return DashboardPreferences(accounts=_merge_preferences(stored, user_permissions))
+
+
+@router.put("/preferences", response_model=DashboardPreferences)
+async def save_dashboard_preferences(
+    preferences: DashboardPreferences,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """保存当前用户的仪表盘账户偏好（勾选状态与排序）。"""
+    user_permissions = get_user_permissions(current_user, db)
+
+    # 只接受当前有权限的账户，避免越权写入
+    permitted_set = set(user_permissions)
+    cleaned = [
+        {"account_id": p.account_id, "included": p.included}
+        for p in preferences.accounts
+        if p.account_id in permitted_set
+    ]
+
+    settings_dict = dict(current_user.settings or {})
+    settings_dict[DASHBOARD_PREF_KEY] = cleaned
+    current_user.settings = settings_dict
+    db.commit()
+
+    return DashboardPreferences(accounts=_merge_preferences(cleaned, user_permissions))
+
+
 @router.get("/summary", response_model=DashboardSummary)
 async def get_dashboard_summary(
     current_user: User = Depends(get_current_user),
